@@ -11,7 +11,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 # Database related classes
 from DatabaseModel import Analysis
 from DatabaseModel import AnalysisError
-from DatabaseModel import AnalysisOutput
+from DatabaseModel import File, OutputFile
 from DatabaseModel import AnalysisStatus
 from CCDaemon.Database.DBError import DBError
 
@@ -193,10 +193,10 @@ class DBHelper(object):
     @staticmethod
     def register_output_file(pipeline, out_file):
         # Add an additonal output file to a pipeline in the database
-        output = AnalysisOutput(node_id=out_file.get_node_id(),
-                                output_key=out_file.get_filetype(),
-                                path=out_file.get_path())
-        pipeline.output.append(output)
+        output_file = File(file_type=out_file.get_filetype(), path=out_file.get_path())
+        output      = OutputFile(task_id=out_file.get_node_id())
+        output.file = output_file
+        pipeline.output.append(output_file)
 
     @staticmethod
     def get_config_file_strings(pipeline):
@@ -215,13 +215,13 @@ class DBHelper(object):
         config = None
 
         if config_type == "graph":
-            config = pipeline.analysis_type.graph_config.data
+            config = pipeline.analysis_type.graph_config
 
         elif config_type == "resource_kit":
-            config = pipeline.analysis_type.resource_kit.data
+            config = pipeline.analysis_type.resource_kit
 
         elif config_type == "platform":
-            config = pipeline.analysis_type.platform_config.data
+            config = pipeline.analysis_type.platform_config
 
         elif config_type == "sample_sheet":
             config = pipeline.sample_sheet
