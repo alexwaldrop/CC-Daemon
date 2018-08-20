@@ -3,7 +3,7 @@ import threading
 import logging
 from datetime import datetime
 
-from GAPDaemon.Pipeline import PipelineError, PipelineStatus
+from CCDaemon.Pipeline import PipelineError, PipelineStatus
 
 class PipelineRunner(threading.Thread):
 

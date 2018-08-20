@@ -1,8 +1,8 @@
 import logging
 import abc
 
-from GAPDaemon.Workers import StatusWorker
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Workers import StatusWorker
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 
 class ReportWorker(StatusWorker):
     # Main class for pulling results of finished pipelines and updating their status in the database

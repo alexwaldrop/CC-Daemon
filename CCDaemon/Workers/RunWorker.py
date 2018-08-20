@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 
-from GAPDaemon.Workers import StatusWorker
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Workers import StatusWorker
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 
 class RunWorker(StatusWorker):
     # Main class for loading idle pipelines from database

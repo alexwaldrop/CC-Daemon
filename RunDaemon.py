@@ -5,7 +5,7 @@ import argparse
 import logging
 import signal
 
-from GAPDaemon import DaemonManager
+from CCDaemon import DaemonManager
 
 # Define the available platform modules
 available_platforms = DaemonManager.AVAILABLE_PLATFORMS

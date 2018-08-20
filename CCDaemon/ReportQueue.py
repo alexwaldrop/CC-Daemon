@@ -3,7 +3,7 @@ import json
 import logging
 
 from Config import Validatable
-from GAPDaemon.Pipeline import PipelineReport
+from CCDaemon.Pipeline import PipelineReport
 
 
 class ReportQueue(Validatable):

@@ -5,8 +5,8 @@ import sys
 import os
 
 from Config import ConfigParser
-from GAPDaemon.Workers import LaunchWorker, RunWorker, ReportWorker
-from GAPDaemon.Database import DBHelper
+from CCDaemon.Workers import LaunchWorker, RunWorker, ReportWorker
+from CCDaemon.Database import DBHelper
 from PipelineQueue import PipelineQueue
 from PlatformFactory import PlatformFactory
 from Emailer import Emailer

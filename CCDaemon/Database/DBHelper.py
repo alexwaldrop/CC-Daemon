@@ -13,11 +13,11 @@ from DatabaseModel import Analysis
 from DatabaseModel import AnalysisError
 from DatabaseModel import AnalysisOutput
 from DatabaseModel import AnalysisStatus
-from GAPDaemon.Database.DBError import DBError
+from CCDaemon.Database.DBError import DBError
 
 # Pipeline Error and Status classes
-from GAPDaemon.Pipeline import PipelineError
-from GAPDaemon.Pipeline import PipelineStatus
+from CCDaemon.Pipeline import PipelineError
+from CCDaemon.Pipeline import PipelineStatus
 
 class DBHelper(object):
 

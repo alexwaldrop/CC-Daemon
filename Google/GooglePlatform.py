@@ -7,7 +7,7 @@ from StringIO import StringIO
 
 from configobj import ConfigObj
 
-from GAPDaemon.Platform import Platform
+from CCDaemon.Platform import Platform
 from GoogleProcessor import GoogleProcessor
 
 class GooglePlatform(Platform):

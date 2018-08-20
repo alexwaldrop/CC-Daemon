@@ -1,7 +1,7 @@
 import logging
 
 from PubSub import PubSub
-from GAPDaemon import ReportQueue
+from CCDaemon import ReportQueue
 
 class GoogleReportQueue(ReportQueue):
     # Class for pulling results of finished pipelines from Google PubSub

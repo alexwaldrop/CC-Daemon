@@ -5,8 +5,8 @@ import os
 import sys
 
 from Config import ConfigParser
-from GAPDaemon.Database import DBHelper
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Database import DBHelper
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 from RunDaemon import configure_logging
 
 
