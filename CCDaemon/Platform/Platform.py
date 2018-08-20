@@ -113,6 +113,14 @@ class Platform(Validatable):
         # Remove local file
         os.remove(local_filename)
 
+    def get_cc_version(self):
+        cmd = "cd {0} ; git log -1 --pretty=%h".format(self.workspace["cc_dir"])
+        out, err = self.run_command("get_cc_version", cmd)
+        if len(err) != 0:
+            logging.error("Unable to determine git commit version of CloudConductor! Received the following error msg:\n%s" % err)
+            raise RuntimeError("Unable to determine git commit version of CloudConductor!")
+        return out.strip()
+
     def preprocess_configs(self, cc_config_strings):
         # Empty function containing any platform specific methods for make any modifications to config files
         # E.g. - GooglePlatform config needs to point to a startup-script that will be created on the fly
