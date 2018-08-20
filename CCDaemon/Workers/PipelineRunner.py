@@ -7,7 +7,7 @@ from CCDaemon.Pipeline import PipelineError, PipelineStatus
 
 class PipelineRunner(threading.Thread):
 
-    def __init__(self, pipeline, config_file_strings, platform):
+    def __init__(self, pipeline, config_file_strings, platform, cc_commit=None):
         super(PipelineRunner, self).__init__()
 
         # Get data from pipeline DB record
@@ -44,6 +44,9 @@ class PipelineRunner(threading.Thread):
         # Run as a daemon so thread will quit upon error in main program
         self.daemon = True
 
+        # Version of CloudConductor being used
+        self.cc_version = cc_commit
+
     ##### Core Functions #####
     def run(self):
         # Load pipeline platform and run pipeline using GAP
@@ -55,13 +58,17 @@ class PipelineRunner(threading.Thread):
 
             # Launch new platform and load all resources necessary to run GAP
             self.set_status(PipelineStatus.LOADING)
-            self.platform.launch(cc_config_files=self.config_file_strings)
+            self.platform.launch(cc_config_files=self.config_file_strings, commit_id=self.cc_version)
 
             # Exit run if pipeline cancelled by user
             if self.get_status() == PipelineStatus.CANCELLING:
                 raise
 
-            # Run GAP
+            # Get version of CloudConductor being used if not gotten already
+            if self.cc_version is None:
+                self.cc_version = self.platform.get_cc_version()
+
+            # Run CloudConductor
             self.set_status(PipelineStatus.RUNNING)
             self.platform.run_cc()
 
@@ -182,3 +189,6 @@ class PipelineRunner(threading.Thread):
 
     def get_disk_space(self):
         return self.disk_space
+
+    def get_cc_version(self):
+        return self.cc_version
