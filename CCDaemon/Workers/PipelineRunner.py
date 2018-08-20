@@ -55,7 +55,7 @@ class PipelineRunner(threading.Thread):
 
             # Launch new platform and load all resources necessary to run GAP
             self.set_status(PipelineStatus.LOADING)
-            self.platform.launch(gap_config_files=self.config_file_strings)
+            self.platform.launch(cc_config_files=self.config_file_strings)
 
             # Exit run if pipeline cancelled by user
             if self.get_status() == PipelineStatus.CANCELLING:
@@ -63,7 +63,7 @@ class PipelineRunner(threading.Thread):
 
             # Run GAP
             self.set_status(PipelineStatus.RUNNING)
-            self.platform.run_gap()
+            self.platform.run_cc()
 
             # Notify successful completion
             logging.info("(PipelineRunner %s) Pipeline completed successfully!" % self.id)
@@ -118,7 +118,7 @@ class PipelineRunner(threading.Thread):
 
         if curr_status == PipelineStatus.RUNNING:
             # Gracefully kill GAP if currently running
-            self.platform.cancel_gap()
+            self.platform.cancel_cc()
 
         elif curr_status == PipelineStatus.LOADING:
             # Gracefully stop platform if loading
