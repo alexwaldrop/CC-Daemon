@@ -52,28 +52,28 @@ class GooglePlatform(Platform):
 
         logging.info("Authentication to Google Cloud was successful.")
 
-    def preprocess_configs(self, gap_config_strings):
+    def preprocess_configs(self, cc_config_strings):
         # Modify platform config to point to where startup-script and key-files will be located
-        plat_config = ConfigObj(StringIO(gap_config_strings["platform"]))
+        plat_config = ConfigObj(StringIO(cc_config_strings["platform"]))
 
         # Add key file path to platform config
         self.workspace["key_file"] = os.path.join(self.wrk_dir,"google_key_file.json")
         plat_config["global"]["service_account_key_file"] = self.workspace["key_file"]
 
         # Add startup script path to platform config
-        if gap_config_strings["startup_script"] is not None:
+        if cc_config_strings["startup_script"] is not None:
             plat_config["main_instance"]["startup_script"]   = self.workspace["startup_script"]
             plat_config["worker_instance"]["startup_script"] = self.workspace["startup_script"]
 
         # Replace existing platform config string with updated config string
-        gap_config_strings["platform"] = "\n".join(plat_config.write())
+        cc_config_strings["platform"] = "\n".join(plat_config.write())
 
         # Add key file data to config_strings so it will be uploaded to instance
         with open(self.key_file, "r") as fh:
                 key_string = fh.read()
-        gap_config_strings["key_file"] = key_string
+        cc_config_strings["key_file"] = key_string
 
-        return gap_config_strings
+        return cc_config_strings
 
     def upload_file(self, src_path, dest_path):
         cmd = "gcloud compute scp %s gap@%s:%s --zone %s" % (src_path, self.processor.name, dest_path, self.zone)
@@ -85,7 +85,7 @@ class GooglePlatform(Platform):
 
     def init_processor(self):
         # Initialize and return the main processor needed to load/manage the platform
-        logging.info("Creating GAP runner platform instance...")
+        logging.info("Creating CloudConductor runner platform instance...")
 
         # Get name, nr_cpus, mem and instantiate main instance object
         name        = self.__format_instance_name("Runner-%s" % str(self.name[:20]))
