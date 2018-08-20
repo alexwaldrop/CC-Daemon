@@ -53,6 +53,11 @@ class RunWorker(StatusWorker):
                 end_time                = active_pipeline.get_end_time()
                 db_pipeline.run_time    = self.__time_elapsed(start=start_time, end=end_time)
 
+                # Record commit version in database
+                cc_version = active_pipeline.get_cc_version()
+                if cc_version is not None:
+                    db_pipeline.git_commit = cc_version
+
                 # Record pipeline success status in database
                 curr_err_type           = active_pipeline.get_err_type()
                 curr_err_msg            = active_pipeline.get_err_msg()
