@@ -1,0 +1,393 @@
+#!/bin/bash
+
+# Inspiration from https://gist.github.com/shawnrice/11076762
+# Name of daemon
+daemon_name="gap-daemon"
+
+# Get actual path where this script is located no matter where program is called from
+script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# Names of GAP daemon component scripts
+main_script_name="RunDaemon.py"
+resize_script_name="ResizeQueue.py"
+cancel_script_name="CancelPipeline.py"
+
+echo_error(){
+    # Echo error message to terminal and exit with status
+    # $1: Error message, $2: Exit code
+    echo "$daemon_name error: $1"
+    exit $2
+}
+
+# Test python installation
+which python 1>/dev/null || echo_error "Could not locate a python installation!"
+
+# Absolute paths to GAP daemon scripts
+python=$(which python)
+main_script="$script_dir/$main_script_name"
+resize_script="$script_dir/$resize_script_name"
+cancel_script="$script_dir/$cancel_script_name"
+
+# Test that scripts exist
+test -f $main_script || echo_error "$main_script does not exist!" 1
+test -f $resize_script || echo_error "$resize_script does not exist!" 1
+test -f $cancel_script || echo_error "$cancel_script does not exist!" 1
+
+# Test that scripts work and appear to produce the correct output
+( $python $main_script --help 2>&1 | grep -q GAP-Daemon ) 2> /dev/null || echo_error "Help menu of $main_script_name does not match expectations!" 1
+( $python $resize_script --help 2>&1 | grep -q GAP-Daemon-Resize ) 2> /dev/null || echo_error "Help menu of $resize_script_name does not match expectations!" 1
+( $python $cancel_script --help 2>&1 | grep -q GAP-Daemon-Cancel ) 2> /dev/null || echo_error "Help menu of $cancel_script_name does not match expectations!" 1
+
+
+# Set appropriate read/write permissions
+umask 022
+
+# Paths to daemon files
+daemon_dir="$HOME/.$daemon_name"
+pid_file="$daemon_dir/$daemon_name.pid"
+config_file="$daemon_dir/$daemon_name.config"
+log_file="$daemon_dir/$daemon_name.log"
+
+
+# Log maxsize in KB
+log_max_size=1024   # 1mb
+
+################################################################################
+# Accessory Functions
+################################################################################
+
+check_daemon_dir(){
+    # Make daemon directory if it doesn't exist
+    if [ ! -d $daemon_dir ]; then
+        mkdir $daemon_dir
+        chmod 0755 $daemon_dir
+    fi
+}
+
+check_pid_file(){
+    # Check to make sure pid file exists
+    if [ ! -f $pid_file ]; then
+        touch $pid_file
+        chmod 0755 $pid_file
+    fi
+}
+
+refresh_config_file(){
+    # Move GAP config file to standard location
+    cp $1 $config_file
+    chmod 0755 $config_file
+}
+
+check_log_file() {
+  # Make sure log file exists
+    if [ ! -f $log_file ]; then
+        touch $log_file
+        chmod 0755 $log_file
+    else
+        # Check to see if we need to rotate the logs.
+        size=$((`ls -l $log_file | cut -d " " -f 5`/1024))
+        if [[ $size -gt $log_max_size ]]; then
+            old_log_file="$daemon_dir/$daemon_name-"`date +"%Y-%m-%d-%R:%S"`".log"
+            mv $log_file $old_log_file
+            touch $log_file
+            chmod 0755 $log_file
+        fi
+    fi
+}
+
+check_start_args() {
+    # Check to make sure daemon start input arguments are valid
+
+    # Check to make sure correct number of args
+    if [ $# -ne 3 ];then
+        # Exit if fewer than required number of arguments
+        show_start_usage "Incorrect number of arguments!"
+    fi
+
+    # Check to make sure config file actually exists
+    if [ ! -f $2 ];then
+        show_start_usage "Invalid config file: $2"
+    fi
+
+    # Check to make sure platform type is valid
+    if [ $3 != "Google" ];then
+        show_start_usage "Invalid platform-type: $3"
+    fi
+}
+
+check_cancel_pipeline_args() {
+
+    # Check to make sure correct number of args
+    if [ $# -ne 2 ];then
+        # Exit if fewer than required number of arguments
+        show_cancel_pipeline_usage "Incorrect number of arguments!"
+    fi
+}
+
+check_resize_queue_args() {
+
+    # Check to make sure correct number of args
+    if [ $# -ne 2 ];then
+        # Exit if fewer than required number of arguments
+        if [ $2 != "MANUAL" ];then
+            show_resize_queue_usage
+        fi
+    fi
+}
+
+check_daemon_status() {
+    # Check daemon status
+    start-stop-daemon --status --verbose --pidfile $pid_file
+}
+
+update_pid() {
+if [ -f "$pid_file" ]; then
+  oldPid=`cat "$pid_file"`
+fi
+}
+
+report_daemon_status() {
+    # Check and report current daemon run status
+    check_daemon_status
+    status=$?
+    if [ $status = 0 ]; then
+        echo "Daemon is running!"
+    elif [ $status = 3 ]; then
+        echo "Daemon is stopped!"
+    elif [ $status = 1 ]; then
+        echo "Daemon is stopped but pid file exists!"
+    else
+        echo "Unable to determine daemon status!"
+    fi
+}
+
+log () {
+    # Generic log function
+    echo "$1" >> "$log_file"
+}
+
+log_daemon_start() {
+    # Generic log function.
+    log '*** '`date +"%Y-%m-%d"`": $daemon_name with Pid $oldPid started!"
+}
+
+log_daemon_stop() {
+    # Generic log function.
+    log '*** '`date +"%Y-%m-%d"`": $daemon_name with Pid $oldPid stopped!"
+}
+
+################################################################################
+# Command line usage display functions
+################################################################################
+
+show_main_usage () {
+
+    # Print error message if one provided
+    if [ -n "$1" ]; then
+        echo "$1"
+    fi
+
+    # Print
+    echo "usage: $daemon_name <start | stop | status | cancel-pipeline | resize-queue | viewlog>"
+    echo
+    echo "Modules:"
+    echo $'\t' "start:           Start the GAP daemon service if not already running."
+    echo $'\t' "stop:            Stop the GAP daemon service if it's running."
+    echo $'\t' "status:          Check whether GAP daemon service is currently running."
+    echo $'\t' "cancel-pipeline: Cancel a specific pipeline being run without stopping the daemon service."
+    echo $'\t' "resize-queue:    Change pipeline queue resource limits without stopping the daemon service."
+    echo $'\t' "viewlog:         Tail the active log file being written by the daemon service."
+
+    # Exit with error status
+    exit 1
+}
+
+show_start_usage () {
+
+    # Print error message if one provided
+    if [ -n "$1" ]; then
+        echo "$1"
+    fi
+
+    echo "usage: $daemon_name start <config-file> <platform-type>"
+    echo "Arguments:"
+    echo $'\t' "config-file:   Path to GAP Daemon config file."
+    echo $'\t' "platform-type: Platform where GAP daemon service will run. Supported platforms: Google."
+
+    # Exit with error status
+    exit 1
+}
+
+show_cancel_pipeline_usage () {
+
+    # Print error message if one provided
+    if [ -n "$1" ]; then
+        echo "$1"
+    fi
+
+    echo "usage: $daemon_name cancel-pipeline <pipeline-id>"
+    echo "Arguments:"
+    echo $'\t' "pipeline-id:   Database Id of pipeline to cancel."
+
+    # Exit with error status
+    exit 1
+}
+
+show_resize_queue_usage () {
+
+    # Print error message if one provided
+    if [ -n "$1" ]; then
+        echo "$1"
+    fi
+
+    echo "usage: $daemon_name resize-queue <action>"
+    echo "Actions:"
+    echo $'\t' "INCREASE: Double pipeline queue CPU, RAM, and Disk space limits."
+    echo $'\t' "DECREASE: Halve pipeline queue CPU, RAM, and Disk space limits."
+    echo $'\t' "LOCK:     Set pipeline queue CPU, RAM, and Disk space limits to 0."
+    echo $'\t' "RESET:    Reset CPU, RAM, and Disk space limits to defaults."
+    echo $'\t' "MANUAL:   Manually set CPU, RAM, and Disk space limits."
+
+    # Exit with error status
+    exit 1
+}
+
+################################################################################
+# MAIN PROGRAM
+################################################################################
+
+# Get the pid of currently running daemon if it's running
+update_pid
+
+# Parse command line options to determine action to take
+case $1 in
+
+    # Start the daemon if it's not already running
+    start)
+
+        # Check input arguments
+        check_start_args $@
+        check_daemon_dir
+        check_pid_file
+        refresh_config_file $2
+        check_log_file
+
+        # Generate command to run
+        daemon="$python $main_script"
+        daemon_args="--config $config_file --platform $3 -vvv"
+
+        # Start process with start-stop-daemon
+        if start-stop-daemon --start --quiet --background      \
+        --pidfile $pid_file --make-pidfile --startas /bin/bash \
+        -- -c "exec $daemon $daemon_args >> $log_file 2>&1"; then
+
+            # Print message if daemon wasn't already running and was successfully started
+            echo "Successfully started $daemon_name!"
+            update_pid
+            log_daemon_start
+
+        else
+            echo "$daemon_name already running!"
+        fi
+        ;;
+
+    # Stop the daemon if it's running
+    stop)
+
+
+        if start-stop-daemon --stop --quiet --pidfile $pid_file --signal INT; then
+
+            # Print message if daemon is running and was successfully stopped
+            echo "Stop signal successfully sent to $daemon_name!"
+            log_daemon_stop
+
+        else
+            echo "Nothing to stop; $daemon_name not currently running!"
+        fi
+        ;;
+
+    # Report current run status of daemon
+    status)
+        report_daemon_status
+        ;;
+
+    # Cancel a currently running pipeline by its ID
+    cancel-pipeline)
+
+        # Check to make sure pipeline id is specified on command line
+        check_cancel_pipeline_args $@
+
+        # Create cancel pipeline command
+        cancel_cmd="$python $cancel_script --config $config_file --pipeline-id $2"
+
+        # Check to see whether daemon is running
+        check_daemon_status
+        status=$?
+
+        if [ $status != 0 ]; then
+            # Cancel pipeline when daemon isn't running IFF config file exists
+            if [ -f $config_file ]; then
+                eval $cancel_cmd && echo "Successfully cancelled pipeline $2!"
+            else
+                echo "Unable to cancel pipeline $2. Daemon is not running and no config file specified."
+            fi
+        else
+            eval $cancel_cmd && echo "Successfully cancelled pipeline $2!"
+        fi
+    ;;
+
+    # Modify the size of the current pipeline queue
+    resize-queue)
+
+        # Check to make sure pipeline id is specified on command line
+        check_resize_queue_args $@
+
+        if [ $# -eq 2 ]; then
+            # Create resize queue command
+            resize_cmd="$python $resize_script --config $config_file --action $2"
+        else
+            # Create queue command (for Manual setting)
+            resize_cmd="$python $resize_script --config $config_file --action $2 ${@:3}"
+        fi
+
+        # Check to see whether daemon is running
+        check_daemon_status
+        status=$?
+
+        if [ $status != 0 ]; then
+            # Don't re-size if daemon isn't currently running
+            echo "Unable to resize pipeline queue because daemon isn't running!"
+        else
+            # Run command to change value in config
+            eval $resize_cmd
+            # Send sighup to update daemon
+            kill -s SIGHUP $oldPid
+        fi
+    ;;
+
+    viewlog)
+
+        # Exit without viewing logs if log file doesn't actually exist
+        if [ ! -f $log_file ];then
+            echo "No active logs to view at present. There might be some older logs in $daemon_dir."
+            exit 0
+        fi
+
+        # Set the number of lines requested (default=50)
+        if [ $# -gt 1 ]; then
+            num_lines=$2
+        else
+            num_lines=50
+        fi
+
+        # Tail the logfile
+        tail -n $num_lines $log_file
+    ;;
+
+    *)
+
+    # Throw usage error if incorrect argument provided
+    show_main_usage "Must specify a valid $daemon_name module!"
+esac
+
+exit 0

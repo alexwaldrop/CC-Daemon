@@ -1,0 +1,18 @@
+daemon_sleep_time	= integer(1,1000)
+worker_sleep_time	= integer(1,60)
+email_recipients    = force_list
+
+[db_helper]
+	database		= string
+	host			= string
+	mysql_driver	= string
+	username        = string
+	password        = string
+
+[pipeline_queue]
+	max_cpus 		= integer(0,100000000000)
+	max_mem	 		= integer(0,100000000000)
+	max_disk_space 	= integer(0,100000000000)
+[report_queue]
+[platform]
+[email_reporter]

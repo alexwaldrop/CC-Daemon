@@ -1,0 +1,8 @@
+nr_cpus                     = integer(1,6, default=2)
+mem                         = integer(1,20, default=8)
+wrk_dir                     = string(default="/data/")
+zone                        = string(default="us-east1-b")
+service_account_key_file    = string
+disk_image                  = string(default="gap-runner-image")
+boot_disk_size              = integer(1,500, default=75)
+gap_url                     = string
