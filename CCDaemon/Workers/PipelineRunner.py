@@ -7,12 +7,13 @@ from CCDaemon.Pipeline import PipelineError, PipelineStatus
 
 class PipelineRunner(threading.Thread):
 
-    def __init__(self, pipeline, config_file_strings, platform, cc_commit=None):
+    def __init__(self, pipeline, config_file_strings, platform):
         super(PipelineRunner, self).__init__()
 
         # Get data from pipeline DB record
         self.id     = pipeline.analysis_id
         self.name   = pipeline.name
+        self.cc_version = pipeline.git_commit
 
         # Platform for running pipeline
         self.platform           = platform
@@ -43,9 +44,6 @@ class PipelineRunner(threading.Thread):
 
         # Run as a daemon so thread will quit upon error in main program
         self.daemon = True
-
-        # Version of CloudConductor being used
-        self.cc_version = cc_commit
 
     ##### Core Functions #####
     def run(self):
