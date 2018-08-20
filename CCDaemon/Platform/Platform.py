@@ -38,7 +38,7 @@ class Platform(Validatable):
         # Main platform processor
         self.processor = None
 
-    def launch(self, cc_config_files):
+    def launch(self, cc_config_files, commit_id=None):
 
         # Loads platform capable of running pipeline
         logging.info("(%s) Creating platform..." % self.name)
@@ -79,6 +79,12 @@ class Platform(Validatable):
         logging.info("(%s) Downloading CloudConductor!" % self.name)
         cmd = "sudo git clone %s %s !LOG3!" % (self.cc_git_url, self.workspace["cc_dir"])
         self.run_command("download_cc", cmd)
+
+        # Revert to desired commit if specified
+        if commit_id is not None:
+            logging.info("(%s) Reverting CloudConductor to commid id: %s" % (self.name, commit_id))
+            cmd = "cd %s ; sudo git reset --hard %s" % (self.workspace["cc_dir"], commit_id)
+            self.run_command("git_reset_cc", cmd)
 
         # Make any platform-specific modifications to config files
         logging.info("(%s) Preprocessing config files!" % self.name)
