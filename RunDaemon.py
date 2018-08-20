@@ -27,15 +27,15 @@ def configure_logging(verbosity):
 
     # Coloring the log levels
     if sys.stderr.isatty():
-        logging.addLevelName(logging.ERROR, "%s%s%s%s%s" % (BOLD, ERROR, "GAP_DAEMON_ERROR", END, END))
-        logging.addLevelName(logging.WARNING, "%s%s%s%s%s" % (BOLD, WARNING, "GAP_DAEMON_WARNING", END, END))
-        logging.addLevelName(logging.INFO, "%s%s%s%s%s" % (BOLD, INFO, "GAP_DAEMON_INFO", END, END))
-        logging.addLevelName(logging.DEBUG, "%s%s%s%s%s" % (BOLD, DEBUG, "GAP_DAEMON_DEBUG", END, END))
+        logging.addLevelName(logging.ERROR, "%s%s%s%s%s" % (BOLD, ERROR, "CC_DAEMON_ERROR", END, END))
+        logging.addLevelName(logging.WARNING, "%s%s%s%s%s" % (BOLD, WARNING, "CC_DAEMON_WARNING", END, END))
+        logging.addLevelName(logging.INFO, "%s%s%s%s%s" % (BOLD, INFO, "CC_DAEMON_INFO", END, END))
+        logging.addLevelName(logging.DEBUG, "%s%s%s%s%s" % (BOLD, DEBUG, "CC_DAEMON_DEBUG", END, END))
     else:
-        logging.addLevelName(logging.ERROR, "GAP_DAEMON_ERROR")
-        logging.addLevelName(logging.WARNING, "GAP_DAEMON_WARNING")
-        logging.addLevelName(logging.INFO, "GAP_DAEMON_INFO")
-        logging.addLevelName(logging.DEBUG, "GAP_DAEMON_DEBUG")
+        logging.addLevelName(logging.ERROR, "CC_DAEMON_ERROR")
+        logging.addLevelName(logging.WARNING, "CC_DAEMON_WARNING")
+        logging.addLevelName(logging.INFO, "CC_DAEMON_INFO")
+        logging.addLevelName(logging.DEBUG, "CC_DAEMON_DEBUG")
 
     # Setting the level of the logs
     level = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG][verbosity]
@@ -99,7 +99,7 @@ def configure_argparser(argparser_obj):
 def main():
 
     # Configure argparser
-    argparser = argparse.ArgumentParser(prog="GAP-Daemon")
+    argparser = argparse.ArgumentParser(prog="CC-Daemon")
     configure_argparser(argparser)
 
     # Parse the arguments
@@ -111,13 +111,13 @@ def main():
     # Read and validate daemon config
     config_file     = args.config_file
 
-    # Create GAP daemon and make global
-    gap_daemon  = DaemonManager(config_file=config_file, platform_type=args.platform)
+    # Create CC daemon and make global
+    cc_daemon  = DaemonManager(config_file=config_file, platform_type=args.platform)
     err_msg     = ""
 
     try:
 
-        # Validate GAP daemon components
+        # Validate CC daemon components
         logging.info("(Main) Validating GAP daemon...")
         # gap_daemon.validate()
         logging.info("(Main) GAP daemon is valid!")
@@ -125,13 +125,13 @@ def main():
         # Define inner function to update pipeline queue when a sighup is received
         def update_daemon(signum, frame):
             logging.debug("SIGHUP received!")
-            gap_daemon.update_pipeline_queue()
+            cc_daemon.update_pipeline_queue()
 
         # Register SIGHUP as signal indicating when daemon should update
         signal.signal(signal.SIGHUP, update_daemon)
 
-        # Summon the GAP daemon and have it run until an error occurs
-        gap_daemon.summon()
+        # Summon the CC daemon and have it run until an error occurs
+        cc_daemon.summon()
 
     except KeyboardInterrupt, e:
         logging.error("(Main) Keyboard interrupt!")
@@ -147,8 +147,8 @@ def main():
 
     finally:
         # Safely clean-up and send error report
-        gap_daemon.finalize(err_msg=err_msg)
-        logging.info("GAP-Daemon exited gracefully!")
+        cc_daemon.finalize(err_msg=err_msg)
+        logging.info("CC-Daemon exited gracefully!")
 
 if __name__ == "__main__":
     main()

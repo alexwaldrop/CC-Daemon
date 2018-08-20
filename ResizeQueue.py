@@ -23,7 +23,7 @@ def configure_argparser(argparser_obj):
 
         return arg_string
 
-    # Path to GAP Daemon config file
+    # Path to CC Daemon config file
     argparser_obj.add_argument("--config",
                                action="store",
                                type=file_type,
@@ -71,7 +71,7 @@ def configure_argparser(argparser_obj):
 def main():
 
     # Configure argparser
-    argparser = argparse.ArgumentParser(prog="GAP-Daemon-Resize")
+    argparser = argparse.ArgumentParser(prog="CC-Daemon-Resize")
     configure_argparser(argparser)
 
     # Parse the arguments
@@ -84,7 +84,7 @@ def main():
 
         # Read config file
         exec_dir = sys.path[0]
-        config_schema = os.path.join(exec_dir, "GAPDaemon/GAPDaemon.validate")
+        config_schema = os.path.join(exec_dir, "CCDaemon/CCDaemon.validate")
         config = ConfigParser(args.config_file, config_spec=config_schema).get_config()
 
         # Get current resource limits
