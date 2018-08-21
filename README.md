@@ -27,14 +27,21 @@ CC-Daemon requires a VM with at least 2 CPUs, 7.5GB RAM. The smaller the better 
 Once you've initialized your VM and can connect via SSH, the following steps gather necessary files in order to run the daemon. First, you'll need to clone the CC-Daemon git repository from GitLab. 
 
 	sudo git clone --recursive git@gitlab.oit.duke.edu:davelab/CC-Daemon.git
+	
+While you're at it, initialize the DatabaseModule submodule:
+
+    cd ./CloudConductor
+    git submodule init
+    git submodule update
 
 If that doesn't work, you may need to make sure the instance's ssh key is registered with the gitlab project. Generate an ssh key if needed:
 
+    cd ~
     ssh-keygen
     
 And get the public key:
 
-    cat .ssh/id_rsa.pub
+    cat ~/.ssh/id_rsa.pub
      
 Then register that public key under the user > settings > ssh_keys associated with your profile on GitLab.
 You should now be able to clone the repository. 
