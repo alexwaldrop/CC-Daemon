@@ -242,11 +242,11 @@ show_resize_queue_usage () {
 
     echo "usage: $daemon_name resize-queue <action>"
     echo "Actions:"
-    echo $'\t' "INCREASE: Double pipeline queue CPU, RAM, and Disk space limits."
-    echo $'\t' "DECREASE: Halve pipeline queue CPU, RAM, and Disk space limits."
-    echo $'\t' "LOCK:     Set pipeline queue CPU, RAM, and Disk space limits to 0."
-    echo $'\t' "RESET:    Reset CPU, RAM, and Disk space limits to defaults."
-    echo $'\t' "MANUAL:   Manually set CPU, RAM, and Disk space limits."
+    echo $'\t' "INCREASE: Double pipeline queue CPU limits."
+    echo $'\t' "DECREASE: Halve pipeline queue CPU limits."
+    echo $'\t' "LOCK:     Set pipeline queue CPU limits to 0."
+    echo $'\t' "RESET:    Reset CPU limits to defaults."
+    echo $'\t' "MANUAL:   Manually set CPU limits."
 
     # Exit with error status
     exit 1
