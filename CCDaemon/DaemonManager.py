@@ -21,10 +21,10 @@ class DaemonManager:
         self.config_file    = config_file
         self.config         = self.__read_config()
 
-        # Determine GAP daemon type
+        # Determine CC daemon type
         self.platform_type = platform_type.upper()
 
-        ## Initialize GAP daemon components ##
+        ## Initialize CC daemon components ##
         # Create DBHelper
         self.db_helper = self.__init_db_helper()
 
@@ -75,12 +75,12 @@ class DaemonManager:
     def summon(self):
 
         # Start running all workers
-        logging.info("Summoning GAP-Daemon...")
+        logging.info("Summoning CC-Daemon...")
         self.launch_worker.start()
         self.run_worker.start()
         self.report_worker.start()
         logging.info(
-            "GAP-Daemon is afoot. Tread lightly brave warrior. There are fouler things than orcs in these mines...")
+            "CC-Daemon is afoot. Tread lightly brave warrior. There are fouler things than orcs in these mines...")
 
         while not self.is_stopped():
 
@@ -97,23 +97,23 @@ class DaemonManager:
 
     def finalize(self, err_msg=None):
 
-        # Stop GAPDaemon from running
+        # Stop CC-Daemon from running
         self.stop()
         try:
 
             # Clean up platform
-            logging.info("Cleaning up GAPDaemon pipelines!")
+            logging.info("Cleaning up CC-Daemon pipelines!")
             self.clean_up()
 
         except BaseException, e:
             # Report any error messages
-            logging.info("(GAPDaemon) Unable to complete GAPDaemon clean-up!")
+            logging.info("(CCDaemon) Unable to complete CCDaemon clean-up!")
             if e.message != "":
                 logging.info("Received the following error message: %s" % e.message)
 
         finally:
-            # Report GAP daemon failure message
-            logging.info("Notifying administrators of GAPDaemon failure...")
+            # Report CC-Daemon failure message
+            logging.info("Notifying administrators of CCDaemon failure...")
             self.report_failure(err_msg)
 
     def clean_up(self):
@@ -170,7 +170,7 @@ class DaemonManager:
         if err_msg is not None:
             msg_body += "\n%s" % err_msg
 
-        # Send email notifying recipients of GAPDaemon failure
+        # Send email notifying recipients of CCDaemon failure
         self.email_reporter.send_email(self.email_recipients, msg_body, msg_subj="CC-Daemon FAILURE ALERT!")
 
     def is_stopped(self):
@@ -194,19 +194,19 @@ class DaemonManager:
                 self.pipeline_queue.set_max_cpus(max_cpus)
 
         except BaseException, e:
-            logging.error("(GAPDaemon) Unable to refresh pipeline queue from config file!")
+            logging.error("(CCDaemon) Unable to refresh pipeline queue from config file!")
             if e.message != "":
-                logging.error("(GAPDaemon) Received the following error message: %s" % e.message)
+                logging.error("(CCDaemon) Received the following error message: %s" % e.message)
 
     def __read_config(self):
         # Return parsed, validated config
         exec_dir        = sys.path[0]
-        config_schema   = os.path.join(exec_dir, "GAPDaemon/GAPDaemon.validate")
+        config_schema   = os.path.join(exec_dir, "CCDaemon/CCDaemon.validate")
         return ConfigParser(self.config_file, config_spec=config_schema).get_config()
 
     def __init_db_helper(self):
         # Initialize database helper from config
-        logging.info("(GAPDaemon) Initializing DBHelper and connecting to database...")
+        logging.info("(CCDaemon) Initializing DBHelper and connecting to database...")
         config = self.config.pop("db_helper")
         return DBHelper(username=config["username"],
                         password=config["password"],
@@ -216,13 +216,13 @@ class DaemonManager:
 
     def __init_pipeline_queue(self):
         # Initialize pipeline queue
-        logging.info("(GAPDaemon) Initializing PipelineQueue...")
+        logging.info("(CCDaemon) Initializing PipelineQueue...")
         config          = self.config.pop("pipeline_queue")
         max_cpus        = config["max_cpus"]
         return PipelineQueue(max_cpus)
 
     def __init_platform_factory(self):
-        logging.info("(GAPDaemon) Initializing PlatformFactory...")
+        logging.info("(CCDaemon) Initializing PlatformFactory...")
         config = self.config.pop("platform")
         if self.platform_type == "GOOGLE":
             from Google import GooglePlatform
@@ -231,7 +231,7 @@ class DaemonManager:
             raise IOError("Unable to initialize platform factory! Unsupported platform type: '%s'." % self.platform_type)
 
     def __init_report_queue(self):
-        logging.info("(GAPDaemon) Initializing ReportQueue...")
+        logging.info("(CCDaemon) Initializing ReportQueue...")
         config = self.config.pop("report_queue")
         if self.platform_type == "GOOGLE":
             from Google import GoogleReportQueue
@@ -240,7 +240,7 @@ class DaemonManager:
             raise IOError("Unable to initialize report queue! Unsupported platform type: '%s'." % self.platform_type)
 
     def __init_email_reporter(self):
-        logging.info("(GAPDaemon) Initializing Email Reporter...")
+        logging.info("(CCDaemon) Initializing Email Reporter...")
         return Emailer(config=self.config.pop("email_reporter"))
 
 
