@@ -64,7 +64,7 @@ Go ahead and change the permissions on the entire folder.
 CC-Daemon requires a Google Cloud authentication key file in order to run. Transfer it onto your instance. 
 
         # Transfer Dave lab access key file
-        gsutil cp gs://davelab_data/CC_Daemon/cc_gcloud_key.json ~/
+        gsutil cp gs://davelab_data/GAP_Daemon/gap_gcloud_key.json ~/
  
  Now, you'll have to modify the config file (cc-daemon.config)so that it actually points to the key file you just transferred to the instance. 
  
