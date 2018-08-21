@@ -64,6 +64,9 @@ class ReportWorker(StatusWorker):
         # Get pipeline record from database
         pipeline = self.db_helper.get_pipeline(session=session, pipeline_id=report.get_pipeline_id())
 
+        # Update pipeline cost
+        pipeline.cost = report.get_cost()
+
         # Add output file information regardless of whether pipeline was successful
         for report_file in report.get_files():
             if report_file.is_found():
