@@ -2,6 +2,7 @@ import logging
 import base64
 import json
 import subprocess as sp
+import zlib
 
 class PubSub(object):
 
@@ -25,7 +26,7 @@ class PubSub(object):
     def get_message(subscription):
         # Function pops next message from a PubSub subscription
         # Decodes message and returns message contents
-        cmd = "gcloud beta pubsub subscriptions pull --max-messages=1 --format=json %s" % subscription
+        cmd = "gcloud pubsub subscriptions pull --format=json %s" % subscription
         err_msg = "Could not receive a message from Google Pub/Sub"
         out = PubSub._run_cmd(cmd, err_msg=err_msg)
 
@@ -48,57 +49,41 @@ class PubSub(object):
 
             # Decode the data
             if data is not None:
-                data = base64.b64decode(base64.b64decode(data))
+                data = zlib.decompress(base64.b64decode(base64.b64decode(data)))
 
         return msg_id, data
 
     @staticmethod
     def acknowledge_message(subscription, message_id):
-        cmd = "gcloud beta pubsub subscriptions ack %s %s" % (subscription, message_id)
+        cmd = "gcloud pubsub subscriptions ack %s --ack-ids=%s" % (subscription, message_id)
         err_msg = "Could not acknowledge a message from Google Pub/Sub"
-        PubSub._run_cmd(cmd, err_msg=err_msg)
-
-    @staticmethod
-    def send_message(topic, message=None, attributes=None, encode=True):
-        # Send a message to an existing Google cloud Pub/Sub topic
-
-        # Return if message and attributes are both empty
-        if message is None and attributes is None:
-            return
-
-        # Parse the input message and attributes
-        message = "" if message is None else message
-        attributes = {} if attributes is None else attributes
-
-        # Encode the message if needed
-        if encode:
-            message = base64.b64encode(message)
-
-        # Parse the attributes and pack into a single data structure message
-        attrs = ",".join(["%s=%s" % (str(k), str(v)) for k, v in attributes.iteritems()])
-
-        # Run command to publish message to the topic
-        cmd = "gcloud --quiet --no-user-output-enabled beta pubsub topics publish %s \"%s\" --attribute=%s" \
-              % (topic, message, attrs)
-
-        err_msg = "Could not send a message to Google Pub/Sub"
         PubSub._run_cmd(cmd, err_msg=err_msg)
 
     @staticmethod
     def subscription_exists(subscription):
         # Return True if pubsub subscription exists, false otherwise
-        cmd = "gcloud beta pubsub subscriptions list --format=json --filter=\"subscriptionId=%s\"" % subscription
+        cmd = "gcloud pubsub subscriptions list --format=json"
         err_msg = "Could not check Google Pub/Sub subscriptions!"
         out = PubSub._run_cmd(cmd, err_msg=err_msg)
-        return (out.strip() != "[]")
+
+        subs = json.loads(out)
+        for sub in subs:
+            if sub["name"].split("/")[-1] == subscription:
+                return True
+        return False
 
     @staticmethod
-    def topic_exists(topic):
+    def topic_exists(topic_id):
         # Return True if pubsub topic exists, false otherwise
-        cmd = "gcloud beta pubsub topics list --format=json --filter=\"topicId=%s\"" % topic
+        cmd = "gcloud pubsub topics list --format=json"
         err_msg = "Could not check Google Pub/Sub topic!"
         out = PubSub._run_cmd(cmd, err_msg=err_msg)
-        return (out.strip() != "[]")
+
+        topics = json.loads(out)
+        for topic in topics:
+            if topic["name"].split("/")[-1] == topic_id:
+                return True
+        return False
 
     @staticmethod
     def is_json(json_string):
