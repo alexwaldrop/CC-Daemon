@@ -163,15 +163,15 @@ class DaemonManager:
             time.sleep(1)
 
     def report_failure(self, err_msg=None):
-        logging.info("Emailing recipients about GAPDaemon failure...")
+        logging.info("Emailing recipients about CC-Daemon failure...")
 
         # Create message body
-        msg_body = "GAPDaemon has failed!"
+        msg_body = "CC-Daemon has failed!"
         if err_msg is not None:
             msg_body += "\n%s" % err_msg
 
         # Send email notifying recipients of GAPDaemon failure
-        self.email_reporter.send_email(self.email_recipients, msg_body, msg_subj="GAPDaemon FAILURE ALERT!")
+        self.email_reporter.send_email(self.email_recipients, msg_body, msg_subj="CC-Daemon FAILURE ALERT!")
 
     def is_stopped(self):
         with threading.Lock():
@@ -188,20 +188,10 @@ class DaemonManager:
             # Read to see if values for pipeline queue have changes from last time
             config = self.__read_config().pop("pipeline_queue")
             max_cpus                = config["max_cpus"]
-            max_mem                 = config["max_mem"]
-            max_disk_space          = config["max_disk_space"]
 
             if max_cpus != self.pipeline_queue.max_cpus:
                 logging.info("Updating pipeline queue CPU limit from %d to %d!" % (self.pipeline_queue.max_cpus, max_cpus))
                 self.pipeline_queue.set_max_cpus(max_cpus)
-
-            if max_mem  != self.pipeline_queue.max_mem:
-                logging.info("Updating pipeline queue RAM limit from %dGB to %dGB!" % (self.pipeline_queue.max_mem, max_mem))
-                self.pipeline_queue.set_max_mem(max_mem)
-
-            if max_disk_space != self.pipeline_queue.max_disk_space:
-                logging.info("Updating pipeline queue disk space limit from %dGB to %dGB!" % (self.pipeline_queue.max_disk_space, max_disk_space))
-                self.pipeline_queue.set_max_disk_space(max_disk_space)
 
         except BaseException, e:
             logging.error("(GAPDaemon) Unable to refresh pipeline queue from config file!")
@@ -229,9 +219,7 @@ class DaemonManager:
         logging.info("(GAPDaemon) Initializing PipelineQueue...")
         config          = self.config.pop("pipeline_queue")
         max_cpus        = config["max_cpus"]
-        max_mem         = config["max_mem"]
-        max_disk_space  = config["max_disk_space"]
-        return PipelineQueue(max_cpus, max_mem, max_disk_space)
+        return PipelineQueue(max_cpus)
 
     def __init_platform_factory(self):
         logging.info("(GAPDaemon) Initializing PlatformFactory...")

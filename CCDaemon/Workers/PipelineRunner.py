@@ -25,8 +25,6 @@ class PipelineRunner(threading.Thread):
 
         # Initialize resource requirement variables
         self.cpus       = pipeline.analysis_type.cpus
-        self.mem        = pipeline.analysis_type.mem
-        self.disk_space = pipeline.analysis_type.disk_space
 
         # Initialize running time variables
         self.max_run_time   = pipeline.analysis_type.max_run_time
@@ -181,12 +179,6 @@ class PipelineRunner(threading.Thread):
 
     def get_cpus(self):
         return self.cpus
-
-    def get_mem(self):
-        return self.mem
-
-    def get_disk_space(self):
-        return self.disk_space
 
     def get_cc_version(self):
         return self.cc_version

@@ -11,8 +11,6 @@ email_recipients    = force_list
 
 [pipeline_queue]
 	max_cpus 		= integer(0,100000000000)
-	max_mem	 		= integer(0,100000000000)
-	max_disk_space 	= integer(0,100000000000)
 [report_queue]
 [platform]
 [email_reporter]

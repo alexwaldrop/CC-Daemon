@@ -73,9 +73,7 @@ class LaunchWorker(StatusWorker):
 
         # Determine if pipeline queue meet pipeline resource requirements
         cpus        = pipeline.analysis_type.cpus
-        mem         = pipeline.analysis_type.mem
-        disk_space  = pipeline.analysis_type.disk_space
-        if not self.pipeline_queue.can_add_pipeline(req_cpus=cpus, req_mem=mem, req_disk_space=disk_space):
+        if not self.pipeline_queue.can_add_pipeline(req_cpus=cpus):
             logging.debug("Unable to run pipeline due to resource limit: %s" % pipeline.analysis_id)
             return False
 
