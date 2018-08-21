@@ -32,10 +32,11 @@ class PipelineReport(object):
             self.data = json.loads(self.data)
 
             # Get primary report components
-            self.pipeline_id    = self.data["pipeline_ID"]
+            self.pipeline_id    = self.data["pipeline_id"]
             self.error          = self.data["error"]
             print self.error
             self.is_success     = self.data["status"] == "Complete"
+            self.cost           = self.data["total_cost"]
 
             # Parse and create file objects from all output files declared in report
             files               = self.data["files"]
@@ -54,19 +55,13 @@ class PipelineReport(object):
     def parse_files(self, report_files):
         # Parse and create file objects from all output files declared in report
         parsed_files = []
-        for node_id, node_files in report_files.iteritems():
-
-            for file_type, file_paths in node_files.iteritems():
-                if isinstance(file_paths, list):
-                    # Case: Multiple files with same node_id, path_key
-                    for file_path in file_paths:
-                        report_file = PipelineOutputFile(file_path, filetype=file_type, node_id=node_id)
-                        parsed_files.append(report_file)
-                elif isinstance(file_paths, basestring):
-                    # Case: Single file with node_id, path_key
-                    report_file = PipelineOutputFile(file_paths, filetype=file_type, node_id=node_id)
-                    parsed_files.append(report_file)
-
+        for report_file in report_files:
+            file_type       = report_file["file_type"]
+            path            = report_file["path"]
+            is_final_output = report_file["is_final_output"]
+            node_id         = report_file["task_id"]
+            if is_final_output:
+                parsed_files.append(PipelineOutputFile(path, filetype=file_type, node_id=node_id))
         return parsed_files
 
     def get_id(self):
