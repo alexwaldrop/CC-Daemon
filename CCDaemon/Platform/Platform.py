@@ -114,7 +114,7 @@ class Platform(Validatable):
         os.remove(local_filename)
 
     def get_cc_version(self):
-        cmd = "cd {0} ; git log -1 --pretty=%h".format(self.workspace["cc_dir"])
+        cmd = "cd {0} ; git log -1 --pretty=%H".format(self.workspace["cc_dir"])
         out, err = self.run_command("get_cc_version", cmd)
         if len(err) != 0:
             logging.error("Unable to determine git commit version of CloudConductor! Received the following error msg:\n%s" % err)
