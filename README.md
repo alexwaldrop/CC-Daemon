@@ -53,6 +53,7 @@ Inside the CC-Daemon folder should look something like this:
 		drwxr-xr-x 2 root root  4096 Jan 19 23:07 Config
 		-rwxr-xr-x 1 root root 11348 Jan 19 23:07 cc-daemon
 		drwxr-xr-x 6 root root  4096 Jan 19 23:07 CCDaemon
+		-rwxr-xr-x 1 root root   737 Jan 19 23:07 cc-daemon.config
 		drwxr-xr-x 2 root root  4096 Jan 19 23:07 Google
 		-rw-r--r-- 1 root root  6066 Jan 19 23:07 ResizeQueue.py
 		-rw-r--r-- 1 root root  5701 Jan 19 23:07 RunDaemon.py
@@ -60,14 +61,12 @@ Go ahead and change the permissions on the entire folder.
 
 		sudo chmod -R 755 ./CC-Daemon
 ## 2.4 Transferring necessary config files to instance
-CC-Daemon requires a config file and a Google Cloud authentication key file in order to run. These need to be transferred onto your instance. 
+CC-Daemon requires a Google Cloud authentication key file in order to run. Transfer it onto your instance. 
 
-		# Transfer CC-Daemon config
-		gsutil cp gs://davelab_data/CC_Daemon/cc_daemon_clouddb.config ~/
         # Transfer Dave lab access key file
         gsutil cp gs://davelab_data/CC_Daemon/cc_gcloud_key.json ~/
  
- Now, you'll have to modify the config file so that it actually points to the key file you just transferred to the instance. 
+ Now, you'll have to modify the config file (cc-daemon.config)so that it actually points to the key file you just transferred to the instance. 
  
  		[platform]
         	zone = us-east1-c
