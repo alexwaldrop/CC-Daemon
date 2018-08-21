@@ -16,6 +16,7 @@ class PipelineReport(object):
         self.is_success     = None
         self.files          = None
         self.cost           = None
+        self.git_commit     = None
 
         # Boolean flag for whether report is valid
         self.valid_report = False
@@ -35,6 +36,7 @@ class PipelineReport(object):
             # Get primary report components
             self.pipeline_id    = self.data["pipeline_id"]
             self.error          = self.data["error"]
+            self.git_commit    = self.data["git_commit"]
             print self.error
             self.is_success     = self.data["status"] == "Complete"
             self.cost           = self.data["total_cost"]
@@ -98,6 +100,9 @@ class PipelineReport(object):
 
     def get_cost(self):
         return  self.cost
+
+    def get_git_commit(self):
+        return self.git_commit
 
     def __str__(self):
         to_ret = "********* Pipeline Report: ***********\n"

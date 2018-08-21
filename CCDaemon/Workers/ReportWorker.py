@@ -67,6 +67,11 @@ class ReportWorker(StatusWorker):
         # Update pipeline cost
         pipeline.cost = report.get_cost()
 
+        # Update CC git version
+        git_commit = report.get_git_commmit()
+        if git_commit is not None:
+            pipeline.git_commit = git_commit
+
         # Add output file information regardless of whether pipeline was successful
         for report_file in report.get_files():
             if report_file.is_found():
