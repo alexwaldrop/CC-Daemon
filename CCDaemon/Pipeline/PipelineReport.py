@@ -1,4 +1,5 @@
 import logging
+import json
 
 from PipelineOutputFile import PipelineOutputFile
 
@@ -27,6 +28,9 @@ class PipelineReport(object):
     def parse_report(self):
         # Attempt to set data members from report data
         try:
+            # Parse data into json
+            self.data = json.loads(self.data)
+
             # Get primary report components
             self.pipeline_id    = self.data["pipeline_ID"]
             self.error          = self.data["error"]

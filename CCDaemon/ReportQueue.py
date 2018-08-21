@@ -19,7 +19,6 @@ class ReportQueue(Validatable):
             # Return a report object from the report queue
             report_id, report_data = self.pull_report()
             if report_id is not None:
-                report_data = json.loads(report_data)
                 return PipelineReport(report_id=report_id, data=report_data)
 
             # Return none if report has no ID as nothing can be done with the report
@@ -59,8 +58,3 @@ class ReportQueue(Validatable):
     @abc.abstractmethod
     def pop_report(self, report_id):
         pass
-
-
-
-
-
