@@ -15,6 +15,7 @@ class PipelineReport(object):
         self.error          = None
         self.is_success     = None
         self.files          = None
+        self.report_files   = None
 
         # Boolean flag for whether report is valid
         self.valid_report = False
@@ -41,6 +42,7 @@ class PipelineReport(object):
             # Parse and create file objects from all output files declared in report
             files               = self.data["files"]
             self.files          = self.parse_files(files)
+            self.report_files   = [rf for rf in self.files if rf.get_filetype() == "qc_report"]
 
             # Indicate that report is valid
             self.valid_report   = True
@@ -83,6 +85,9 @@ class PipelineReport(object):
     def get_files(self):
         # Return list of OutputFile objects declared by pipeline in the report
         return self.files
+
+    def get_report_files(self):
+        return self.report_files
 
     def set_error_msg(self, err_msg):
         # Set an error message for the pipeline
