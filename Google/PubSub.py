@@ -49,7 +49,10 @@ class PubSub(object):
 
             # Decode the data
             if data is not None:
-                data = zlib.decompress(base64.b64decode(base64.b64decode(data)))
+                try:
+                    data = zlib.decompress(base64.b64decode(base64.b64decode(data)))
+                except zlib.error:
+                    data = base64.b64decode(base64.b64decode(data))
 
         return msg_id, data
 
