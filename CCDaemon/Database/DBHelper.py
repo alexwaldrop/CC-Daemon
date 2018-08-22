@@ -195,7 +195,7 @@ class DBHelper(object):
         # Add an additonal output file to a pipeline in the database
         output      = OutputFile(task_id=out_file.get_node_id())
         output.file = File(file_type=out_file.get_filetype(), path=out_file.get_path())
-        pipeline.output.append(output)
+        output.analysis = pipeline
 
     @staticmethod
     def get_config_file_strings(pipeline):
