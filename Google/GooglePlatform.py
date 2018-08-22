@@ -58,12 +58,7 @@ class GooglePlatform(Platform):
 
         # Add key file path to platform config
         self.workspace["key_file"] = os.path.join(self.wrk_dir,"google_key_file.json")
-        plat_config["global"]["service_account_key_file"] = self.workspace["key_file"]
-
-        # Add startup script path to platform config
-        if cc_config_strings["startup_script"] is not None:
-            plat_config["main_instance"]["startup_script"]   = self.workspace["startup_script"]
-            plat_config["worker_instance"]["startup_script"] = self.workspace["startup_script"]
+        plat_config["service_account_key_file"] = self.workspace["key_file"]
 
         # Replace existing platform config string with updated config string
         cc_config_strings["platform"] = "\n".join(plat_config.write())

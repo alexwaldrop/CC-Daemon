@@ -205,7 +205,6 @@ class DBHelper(object):
         config_strings["resource_kit"]    = DBHelper.get_config_file(pipeline, "resource_kit")
         config_strings["platform"]        = DBHelper.get_config_file(pipeline, "platform")
         config_strings["sample_sheet"]    = DBHelper.get_config_file(pipeline, "sample_sheet")
-        config_strings["startup_script"]  = DBHelper.get_config_file(pipeline, "startup_script")
         return config_strings
 
     @staticmethod
@@ -225,13 +224,10 @@ class DBHelper(object):
         elif config_type == "sample_sheet":
             config = pipeline.sample_sheet
 
-        elif config_type == "startup_script":
-            if pipeline.analysis_type.startup_script is not None:
-                config = pipeline.analysis_type.startup_script.data
         else:
             logging.error("DBHelper attempted to get config file of type '%s'." % config_type)
             logging.error(
-                "Must be of following type: 'graph', 'resource_kit', 'startup_script', 'platform', 'sample_sheet'.")
+                "Must be of following type: 'graph', 'resource_kit', 'platform', 'sample_sheet'.")
             raise DBError("Invalid config type requested from database: %s" % config_type)
 
         # Base64 decode if returned something

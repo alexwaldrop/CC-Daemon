@@ -230,7 +230,6 @@ class Platform(Validatable):
         files["resource_kit"]   = os.path.join(wrk_dir, "resource.%s.kit.config" % self.name)
         files["platform"]       = os.path.join(wrk_dir, "platform.%s.config" % self.name)
         files["sample_sheet"]   = os.path.join(wrk_dir, "input.%s.json" % self.name)
-        files["startup_script"] = os.path.join(wrk_dir, "startup.%s.sh" % self.name)
 
         return files
 
