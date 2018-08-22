@@ -49,9 +49,12 @@ class PipelineReport(object):
             self.valid_report   = True
 
         except BaseException, e:
-            logging.error("PipelineReport Error: Unable to parse report!")
+            if self.pipeline_id is None:
+                logging.warning("Invalid pipeline report!")
+            else:
+                logging.warning("Invalid pipeline report for pipeline '{0}'".format(self.pipeline_id))
             if e.message != "":
-                logging.error("Received the following message: %s" % e.message)
+                logging.warning("Received the following message: %s" % e.message)
             # Indicate that report is invalid if unable to parse for any reason
             self.valid_report = False
 
