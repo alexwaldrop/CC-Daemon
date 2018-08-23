@@ -84,6 +84,9 @@ CC-Daemon requires a Google Cloud authentication key file in order to run. Trans
 IMPORTANT NOTE 1: In the previous code snippet, make sure to insert the actual full path to the key file.
 IMPORTANT NOTE 2: DO NOT change the config in any other way unless you're REALLY, REALLY sure what you're doing.
 
+# 2.5 Authorizing your CC-Daemon instance on Google Cloud SQL
+If you get an sql connection error upon starting up, it likely means you need to add the IP address
+of the cc-daemon instance to the Google Cloud ssh authorized IP address list. Look under the SQL > Authorization > Add network.
 
 # 3. Running CC-Daemon
 
