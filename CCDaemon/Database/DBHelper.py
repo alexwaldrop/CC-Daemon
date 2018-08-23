@@ -11,7 +11,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 # Database related classes
 from DatabaseModel import Analysis
 from DatabaseModel import AnalysisError
-from DatabaseModel import File, OutputFile
+from DatabaseModel import File, OutputFile, Stats
 from DatabaseModel import AnalysisStatus
 from CCDaemon.Database.DBError import DBError
 
@@ -196,6 +196,16 @@ class DBHelper(object):
         output      = OutputFile(task_id=out_file.get_node_id())
         output.file = File(file_type=out_file.get_filetype(), path=out_file.get_path())
         output.analysis = pipeline
+
+    @staticmethod
+    def register_qc_stat(pipeline, qc_stat):
+        # Add a qc stat entry for a pipeline
+        stat = Stats(sample_id=qc_stat.get_sample_id(),
+                     key=qc_stat.get_key(),
+                     value=qc_stat.get_value(),
+                     input_file=qc_stat.get_input_file(),
+                     notes=qc_stat.get_notes())
+        stat.analysis = pipeline
 
     @staticmethod
     def get_config_file_strings(pipeline):
