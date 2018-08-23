@@ -2,7 +2,7 @@ import logging
 import abc
 
 from CCDaemon.Workers import StatusWorker
-from CCDaemon.Pipeline import PipelineStatus, PipelineError, QCReport
+from CCDaemon.Pipeline import PipelineStatus, PipelineError, QCReport, parse_qc_report
 
 class ReportWorker(StatusWorker):
     # Main class for pulling results of finished pipelines and updating their status in the database
@@ -94,7 +94,7 @@ class ReportWorker(StatusWorker):
 
                             # Add to database if not already seen
                             if stat_id not in qc_entries_seen:
-                                self.db_helper.register_stat(pipeline, qc_stat)
+                                self.db_helper.register_qc_stat(pipeline, qc_stat)
                                 qc_entries_seen.append(stat_id)
 
                     except BaseException, e:
@@ -173,7 +173,7 @@ class ReportWorker(StatusWorker):
         report_data = self.platform.cat_file(qc_report_file)
 
         # Read file into qc_report
-        qc_report = QCReport(report_data)
+        qc_report = parse_qc_report(report_data)
 
         # Don't unpack if multi-sample qc-report
         if len(qc_report.get_sample_names()) > 1:
@@ -183,7 +183,8 @@ class ReportWorker(StatusWorker):
         qc_stats = []
         for sample in qc_report.get_sample_names():
             sample_data = qc_report.get_sample_data(sample)
-            qc_stats.append(QCStat(sample, sample_data))
+            for qc_entry in sample_data:
+                qc_stats.append(QCStat(sample, qc_entry))
 
         return qc_stats
 
