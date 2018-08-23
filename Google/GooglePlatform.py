@@ -108,6 +108,19 @@ class GooglePlatform(Platform):
                 logging.error("Unable to check path existence: %s" % path)
                 raise
 
+    def cat_file(self, file_path):
+        # Cat a file and return it's contents
+        cmd = "gsutil cat {0}".format(file_path)
+        proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+
+        out, err = proc.communicate()
+        if proc.returncode != 0:
+            logging.error("Unable to cat file: {0}".format(file_path))
+            if len(err) > 0:
+                logging.error("Received following error: %s" % err)
+
+        return out
+
     def transfer(self, src_path, dest_dir, dest_file=None, log_transfer=True, job_name=None, wait=False):
         # Transfer a remote file from src_path to a local directory dest_dir
         # Log the transfer unless otherwise specified

@@ -305,6 +305,11 @@ class Platform(Validatable):
         # Make a directory if it doesn't already exists
         pass
 
+    @abc.abstractmethod
+    def cat_file(self, file_path):
+        # Cat a file and return it's contents
+        pass
+
     ####### PRIVATE UTILITY METHODS
     @staticmethod
     def generate_unique_id(id_len=6):
