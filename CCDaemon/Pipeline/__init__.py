@@ -2,3 +2,4 @@ from PipelineOutputFile import PipelineOutputFile
 from PipelineReport import PipelineReport
 from PipelineStatus import PipelineStatus
 from PipelineError import PipelineError
+from QCReport import QCReportError, QCReport, parse_qc_report
