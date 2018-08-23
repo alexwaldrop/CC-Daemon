@@ -204,6 +204,7 @@ class DBHelper(object):
                      key=qc_stat.get_key(),
                      value=qc_stat.get_value(),
                      input_file=qc_stat.get_input_file(),
+                     task_id=qc_stat.get_task_id(),
                      notes=qc_stat.get_notes())
         stat.analysis = pipeline
 
