@@ -5,4 +5,4 @@ zone                        = string(default="us-east1-b")
 service_account_key_file    = string
 disk_image                  = string(default="gap-runner-image")
 boot_disk_size              = integer(1,500, default=75)
-gap_url                     = string
+cc_url                      = string

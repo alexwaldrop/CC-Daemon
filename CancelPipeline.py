@@ -5,8 +5,8 @@ import os
 import sys
 
 from Config import ConfigParser
-from GAPDaemon.Database import DBHelper
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Database import DBHelper
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 from RunDaemon import configure_logging
 
 
@@ -25,7 +25,7 @@ def configure_argparser(argparser_obj):
 
         return arg_string
 
-    # Path to GAP Daemon config file
+    # Path to CC Daemon config file
     argparser_obj.add_argument("--config",
                                action="store",
                                type=file_type,
@@ -48,7 +48,7 @@ def main():
     cancelled = False
 
     # Configure argparser
-    argparser = argparse.ArgumentParser(prog="GAP-Daemon-Cancel")
+    argparser = argparse.ArgumentParser(prog="CC-Daemon-Cancel")
     configure_argparser(argparser)
 
     # Parse the arguments
@@ -59,7 +59,7 @@ def main():
 
     # Read config file
     exec_dir = sys.path[0]
-    config_schema = os.path.join(exec_dir, "GAPDaemon/GAPDaemon.validate")
+    config_schema = os.path.join(exec_dir, "CCDaemon/CCDaemon.validate")
     config = ConfigParser(args.config_file, config_spec=config_schema).get_config()
 
     try:
@@ -93,7 +93,7 @@ def main():
                 logging.warning("Not cancelling because pipeline is past point of cancelling! Current status: '%s'" % curr_status)
 
     except BaseException, e:
-        logging.error("GAP-Daemon-Cancel failed! No changes were made to the database!")
+        logging.error("CC-Daemon-Cancel failed! No changes were made to the database!")
 
     finally:
         # Report that Pipeline has successfully been cancelled

@@ -20,7 +20,7 @@ class Platform(Validatable):
         # Init essential platform variables from config
         self.nr_cpus            = self.config.pop("nr_cpus")
         self.mem                = self.config.pop("mem")
-        self.gap_git_url        = self.config["gap_url"]
+        self.cc_git_url         = self.config["cc_url"]
         self.wrk_dir            = self.standardize_dir(self.config["wrk_dir"])
 
         # Define workspace filenames
@@ -38,7 +38,7 @@ class Platform(Validatable):
         # Main platform processor
         self.processor = None
 
-    def launch(self, gap_config_files):
+    def launch(self, cc_config_files, commit_id=None):
 
         # Loads platform capable of running pipeline
         logging.info("(%s) Creating platform..." % self.name)
@@ -61,8 +61,8 @@ class Platform(Validatable):
         self.mkdir(self.workspace["log_dir"])
         self.processor.set_log_dir(self.workspace["log_dir"])
 
-        logging.info("(%s) Creating GAP directory: %s!" % (self.name, self.workspace["gap_dir"]))
-        self.mkdir(self.workspace["gap_dir"])
+        logging.info("(%s) Creating CC directory: %s!" % (self.name, self.workspace["cc_dir"]))
+        self.mkdir(self.workspace["cc_dir"])
 
         # Grant all permissions to working directory
         logging.info("(%s) Granting write permissions!" % self.name)
@@ -75,16 +75,22 @@ class Platform(Validatable):
             self.mkdir(self.final_output_dir)
             self.processor.wait()
 
-        # Install GAP freshly from GitHub
-        logging.info("(%s) Downloading GAP!" % self.name)
-        cmd = "sudo git clone %s %s !LOG3!" % (self.gap_git_url, self.workspace["gap_dir"])
-        self.run_command("download_gap", cmd)
+        # Install CC freshly from GitHub
+        logging.info("(%s) Downloading CloudConductor!" % self.name)
+        cmd = "sudo git clone %s %s !LOG3!" % (self.cc_git_url, self.workspace["cc_dir"])
+        self.run_command("download_cc", cmd)
+
+        # Revert to desired commit if specified
+        if commit_id is not None:
+            logging.info("(%s) Reverting CloudConductor to commid id: %s" % (self.name, commit_id))
+            cmd = "cd %s ; sudo git reset --hard %s" % (self.workspace["cc_dir"], commit_id)
+            self.run_command("git_reset_cc", cmd)
 
         # Make any platform-specific modifications to config files
         logging.info("(%s) Preprocessing config files!" % self.name)
-        files_to_upload = self.preprocess_configs(gap_config_files)
+        files_to_upload = self.preprocess_configs(cc_config_files)
 
-        # Transfer GAP config files
+        # Transfer CC config files
         for file_type in files_to_upload:
             file_string = files_to_upload[file_type]
             if file_string is not None:
@@ -107,27 +113,35 @@ class Platform(Validatable):
         # Remove local file
         os.remove(local_filename)
 
-    def preprocess_configs(self, gap_config_strings):
+    def get_cc_version(self):
+        cmd = "cd {0} ; git log -1 --pretty=%H".format(self.workspace["cc_dir"])
+        out, err = self.run_command("get_cc_version", cmd)
+        if len(err) != 0:
+            logging.error("Unable to determine git commit version of CloudConductor! Received the following error msg:\n%s" % err)
+            raise RuntimeError("Unable to determine git commit version of CloudConductor!")
+        return out.strip()
+
+    def preprocess_configs(self, cc_config_strings):
         # Empty function containing any platform specific methods for make any modifications to config files
         # E.g. - GooglePlatform config needs to point to a startup-script that will be created on the fly
-        return gap_config_strings
+        return cc_config_strings
 
-    def run_gap(self):
-        # Run GAP using input files loaded onto platform
+    def run_cc(self):
+        # Run CC using input files loaded onto platform
         cmd = "cd %s ; %s --input %s --name %s --pipeline_config %s --res_kit_config %s --plat_config %s --plat_name %s -o %s -vvv !LOG3!" % (
-            self.workspace["gap_dir"], self.workspace["gap_exec"], self.workspace["sample_sheet"], self.name, self.workspace["graph"],
+            self.workspace["cc_dir"], self.workspace["cc_exec"], self.workspace["sample_sheet"], self.name, self.workspace["graph"],
             self.workspace["resource_kit"], self.workspace["platform"], self.platform_type, self.final_output_dir)
-        return self.run_command("gap", cmd)
+        return self.run_command("cc", cmd)
 
-    def cancel_gap(self):
-        # Gracefully exit GAP run
-        # Create and upload script to stop GAP to instance
-        stop_script = "sudo kill -INT $(pgrep -nf 'GAP/Main.py')"
-        stop_script_path = os.path.join(self.wrk_dir, "stop_gap.sh")
+    def cancel_cc(self):
+        # Gracefully exit CC run
+        # Create and upload script to stop CC to instance
+        stop_script = "sudo kill -INT $(pgrep -nf 'CloudConductor/CloudConductor')"
+        stop_script_path = os.path.join(self.wrk_dir, "stop_cc.sh")
         self.upload_config(config_string=stop_script, dest_path=stop_script_path)
 
         cmd = "bash %s" % stop_script_path
-        self.run_command(job_name="stop_gap", cmd=cmd)
+        self.run_command(job_name="stop_cc", cmd=cmd)
 
     def cancel_launch(self, timeout=500):
         # Gracefully exit launching platform
@@ -207,16 +221,15 @@ class Platform(Validatable):
         # Init runtime logfile name
         files["log_dir"]    = self.standardize_dir(os.path.join(wrk_dir, "daemon_log"))
 
-        # Init GAP folder, executable names
-        files["gap_dir"]    = self.standardize_dir(os.path.join(wrk_dir, "GAP"))
-        files["gap_exec"]   = os.path.join(files["gap_dir"], "Main.py")
+        # Init CC folder, executable names
+        files["cc_dir"]    = self.standardize_dir(os.path.join(wrk_dir, "CloudConductor"))
+        files["cc_exec"]   = os.path.join(files["cc_dir"], "CloudConductor")
 
         # Init config file names
         files["graph"]          = os.path.join(wrk_dir, "graph.%s.config" % self.name)
         files["resource_kit"]   = os.path.join(wrk_dir, "resource.%s.kit.config" % self.name)
         files["platform"]       = os.path.join(wrk_dir, "platform.%s.config" % self.name)
         files["sample_sheet"]   = os.path.join(wrk_dir, "input.%s.json" % self.name)
-        files["startup_script"] = os.path.join(wrk_dir, "startup.%s.sh" % self.name)
 
         return files
 
@@ -233,17 +246,17 @@ class Platform(Validatable):
             self.processor = self.init_processor()
             self.processor.create()
 
-            # Testing whether GAP can be downloaded to processor
+            # Testing whether CC can be downloaded to processor
             self.mkdir(self.wrk_dir)
-            self.mkdir(self.workspace["gap_dir"])
+            self.mkdir(self.workspace["cc_dir"])
 
             # Grant all permissions to working directory
             cmd = "sudo chmod -R 777 %s" % self.wrk_dir
             self.run_command("grant_permissions", cmd)
 
-            # Install GAP freshly from GitHub
-            cmd = "sudo git clone %s %s" % (self.gap_git_url, self.workspace["gap_dir"])
-            self.run_command("download_gap", cmd)
+            # Install CC freshly from GitHub
+            cmd = "sudo git clone %s %s" % (self.cc_git_url, self.workspace["cc_dir"])
+            self.run_command("download_cc", cmd)
 
             is_valid = True
 
@@ -290,6 +303,11 @@ class Platform(Validatable):
     @abc.abstractmethod
     def mkdir(self, dir_path):
         # Make a directory if it doesn't already exists
+        pass
+
+    @abc.abstractmethod
+    def cat_file(self, file_path):
+        # Cat a file and return it's contents
         pass
 
     ####### PRIVATE UTILITY METHODS

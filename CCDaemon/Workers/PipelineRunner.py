@@ -3,7 +3,7 @@ import threading
 import logging
 from datetime import datetime
 
-from GAPDaemon.Pipeline import PipelineError, PipelineStatus
+from CCDaemon.Pipeline import PipelineError, PipelineStatus
 
 class PipelineRunner(threading.Thread):
 
@@ -13,6 +13,7 @@ class PipelineRunner(threading.Thread):
         # Get data from pipeline DB record
         self.id     = pipeline.analysis_id
         self.name   = pipeline.name
+        self.cc_version = pipeline.git_commit
 
         # Platform for running pipeline
         self.platform           = platform
@@ -24,8 +25,6 @@ class PipelineRunner(threading.Thread):
 
         # Initialize resource requirement variables
         self.cpus       = pipeline.analysis_type.cpus
-        self.mem        = pipeline.analysis_type.mem
-        self.disk_space = pipeline.analysis_type.disk_space
 
         # Initialize running time variables
         self.max_run_time   = pipeline.analysis_type.max_run_time
@@ -55,15 +54,19 @@ class PipelineRunner(threading.Thread):
 
             # Launch new platform and load all resources necessary to run GAP
             self.set_status(PipelineStatus.LOADING)
-            self.platform.launch(gap_config_files=self.config_file_strings)
+            self.platform.launch(cc_config_files=self.config_file_strings, commit_id=self.cc_version)
 
             # Exit run if pipeline cancelled by user
             if self.get_status() == PipelineStatus.CANCELLING:
                 raise
 
-            # Run GAP
+            # Get version of CloudConductor being used if not gotten already
+            if self.cc_version is None:
+                self.cc_version = self.platform.get_cc_version()
+
+            # Run CloudConductor
             self.set_status(PipelineStatus.RUNNING)
-            self.platform.run_gap()
+            self.platform.run_cc()
 
             # Notify successful completion
             logging.info("(PipelineRunner %s) Pipeline completed successfully!" % self.id)
@@ -118,7 +121,7 @@ class PipelineRunner(threading.Thread):
 
         if curr_status == PipelineStatus.RUNNING:
             # Gracefully kill GAP if currently running
-            self.platform.cancel_gap()
+            self.platform.cancel_cc()
 
         elif curr_status == PipelineStatus.LOADING:
             # Gracefully stop platform if loading
@@ -177,8 +180,5 @@ class PipelineRunner(threading.Thread):
     def get_cpus(self):
         return self.cpus
 
-    def get_mem(self):
-        return self.mem
-
-    def get_disk_space(self):
-        return self.disk_space
+    def get_cc_version(self):
+        return self.cc_version

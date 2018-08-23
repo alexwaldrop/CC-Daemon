@@ -1,4 +1,4 @@
 [submodule "DatabaseModel"]
-	path = GAPDaemon/Database/DatabaseModel
+	path = CCDaemon/Database/DatabaseModel
 	url = git@gitlab.oit.duke.edu:davelab/DatabaseModel.git
 	branch = master

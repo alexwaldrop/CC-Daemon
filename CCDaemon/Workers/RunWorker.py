@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 
-from GAPDaemon.Workers import StatusWorker
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Workers import StatusWorker
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 
 class RunWorker(StatusWorker):
     # Main class for loading idle pipelines from database
@@ -52,6 +52,11 @@ class RunWorker(StatusWorker):
                 start_time              = active_pipeline.get_start_time()
                 end_time                = active_pipeline.get_end_time()
                 db_pipeline.run_time    = self.__time_elapsed(start=start_time, end=end_time)
+
+                # Record commit version in database
+                cc_version = active_pipeline.get_cc_version()
+                if cc_version is not None:
+                    db_pipeline.git_commit = cc_version
 
                 # Record pipeline success status in database
                 curr_err_type           = active_pipeline.get_err_type()

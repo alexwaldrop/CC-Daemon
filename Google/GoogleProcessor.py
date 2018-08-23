@@ -9,8 +9,8 @@ import time
 
 import requests
 
-from GAPDaemon.Platform import Process
-from GAPDaemon.Platform import Processor
+from CCDaemon.Platform import Process
+from CCDaemon.Platform import Processor
 
 
 class GoogleProcessor(Processor):

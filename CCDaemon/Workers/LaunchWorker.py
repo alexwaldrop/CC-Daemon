@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 
-from GAPDaemon.Workers import StatusWorker, PipelineRunner
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Workers import StatusWorker, PipelineRunner
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 
 class LaunchWorker(StatusWorker):
     # Main class for loading idle pipelines from database
@@ -73,9 +73,7 @@ class LaunchWorker(StatusWorker):
 
         # Determine if pipeline queue meet pipeline resource requirements
         cpus        = pipeline.analysis_type.cpus
-        mem         = pipeline.analysis_type.mem
-        disk_space  = pipeline.analysis_type.disk_space
-        if not self.pipeline_queue.can_add_pipeline(req_cpus=cpus, req_mem=mem, req_disk_space=disk_space):
+        if not self.pipeline_queue.can_add_pipeline(req_cpus=cpus):
             logging.debug("Unable to run pipeline due to resource limit: %s" % pipeline.analysis_id)
             return False
 

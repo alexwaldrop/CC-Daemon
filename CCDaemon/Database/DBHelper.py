@@ -11,13 +11,13 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 # Database related classes
 from DatabaseModel import Analysis
 from DatabaseModel import AnalysisError
-from DatabaseModel import AnalysisOutput
+from DatabaseModel import File, OutputFile, Stats
 from DatabaseModel import AnalysisStatus
-from GAPDaemon.Database.DBError import DBError
+from CCDaemon.Database.DBError import DBError
 
 # Pipeline Error and Status classes
-from GAPDaemon.Pipeline import PipelineError
-from GAPDaemon.Pipeline import PipelineStatus
+from CCDaemon.Pipeline import PipelineError
+from CCDaemon.Pipeline import PipelineStatus
 
 class DBHelper(object):
 
@@ -193,10 +193,20 @@ class DBHelper(object):
     @staticmethod
     def register_output_file(pipeline, out_file):
         # Add an additonal output file to a pipeline in the database
-        output = AnalysisOutput(node_id=out_file.get_node_id(),
-                                output_key=out_file.get_filetype(),
-                                path=out_file.get_path())
-        pipeline.output.append(output)
+        output      = OutputFile(task_id=out_file.get_node_id())
+        output.file = File(file_type=out_file.get_filetype(), path=out_file.get_path())
+        output.analysis = pipeline
+
+    @staticmethod
+    def register_qc_stat(pipeline, qc_stat):
+        # Add a qc stat entry for a pipeline
+        stat = Stats(sample_id=qc_stat.get_sample_id(),
+                     key=qc_stat.get_key(),
+                     value=qc_stat.get_value(),
+                     input_file=qc_stat.get_input_file(),
+                     task_id=qc_stat.get_task_id(),
+                     notes=qc_stat.get_notes())
+        stat.analysis = pipeline
 
     @staticmethod
     def get_config_file_strings(pipeline):
@@ -206,7 +216,6 @@ class DBHelper(object):
         config_strings["resource_kit"]    = DBHelper.get_config_file(pipeline, "resource_kit")
         config_strings["platform"]        = DBHelper.get_config_file(pipeline, "platform")
         config_strings["sample_sheet"]    = DBHelper.get_config_file(pipeline, "sample_sheet")
-        config_strings["startup_script"]  = DBHelper.get_config_file(pipeline, "startup_script")
         return config_strings
 
     @staticmethod
@@ -215,24 +224,21 @@ class DBHelper(object):
         config = None
 
         if config_type == "graph":
-            config = pipeline.analysis_type.graph_config.data
+            config = pipeline.analysis_type.graph_config
 
         elif config_type == "resource_kit":
-            config = pipeline.analysis_type.resource_kit.data
+            config = pipeline.analysis_type.resource_kit
 
         elif config_type == "platform":
-            config = pipeline.analysis_type.platform_config.data
+            config = pipeline.analysis_type.platform_config
 
         elif config_type == "sample_sheet":
             config = pipeline.sample_sheet
 
-        elif config_type == "startup_script":
-            if pipeline.analysis_type.startup_script is not None:
-                config = pipeline.analysis_type.startup_script.data
         else:
             logging.error("DBHelper attempted to get config file of type '%s'." % config_type)
             logging.error(
-                "Must be of following type: 'graph', 'resource_kit', 'startup_script', 'platform', 'sample_sheet'.")
+                "Must be of following type: 'graph', 'resource_kit', 'platform', 'sample_sheet'.")
             raise DBError("Invalid config type requested from database: %s" % config_type)
 
         # Base64 decode if returned something

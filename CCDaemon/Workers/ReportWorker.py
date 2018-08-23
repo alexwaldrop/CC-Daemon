@@ -1,8 +1,8 @@
 import logging
 import abc
 
-from GAPDaemon.Workers import StatusWorker
-from GAPDaemon.Pipeline import PipelineStatus, PipelineError
+from CCDaemon.Workers import StatusWorker
+from CCDaemon.Pipeline import PipelineStatus, PipelineError, QCReport, parse_qc_report
 
 class ReportWorker(StatusWorker):
     # Main class for pulling results of finished pipelines and updating their status in the database
@@ -64,10 +64,44 @@ class ReportWorker(StatusWorker):
         # Get pipeline record from database
         pipeline = self.db_helper.get_pipeline(session=session, pipeline_id=report.get_pipeline_id())
 
+        # Update pipeline cost
+        pipeline.cost = report.get_cost()
+
+        # Update CC git version
+        git_commit = report.get_git_commit()
+        if git_commit is not None:
+            pipeline.git_commit = git_commit
+
         # Add output file information regardless of whether pipeline was successful
+        qc_entries_seen = []
         for report_file in report.get_files():
             if report_file.is_found():
                 self.db_helper.register_output_file(pipeline, report_file)
+
+                # Parse file if qc_report
+                if report_file.get_filetype() == "qc_report":
+
+                    try:
+                        # Try to Parse QCFile
+                        qc_stats = self.parse_qc_report(report_file.get_path())
+
+                        # Add stats parsed from qc file if not already there
+                        for qc_stat in qc_stats:
+                            stat_id = "{0}_{1}_{2}_{3}".format(qc_stat.get_sample_id(),
+                                                                   qc_stat.get_key(),
+                                                                   qc_stat.get_task_id(),
+                                                                   qc_stat.get_input_file())
+
+                            # Add to database if not already seen
+                            if stat_id not in qc_entries_seen:
+                                self.db_helper.register_qc_stat(pipeline, qc_stat)
+                                qc_entries_seen.append(stat_id)
+
+                    except BaseException, e:
+                        logging.warning("Unable to add qc stats to database for file: {0}".format(report_file.get_path()))
+                        if e.message != "":
+                            logging.warning("Received the following error:\n{0}".format(e.message))
+
 
         # Update pipeline status and error type
         if report.is_successful():
@@ -131,3 +165,52 @@ class ReportWorker(StatusWorker):
 
         # Return updated report
         return report
+
+    def parse_qc_report(self, qc_report_file):
+        # Return list of QCStat entries
+
+        # Read file contents from stdout
+        report_data = self.platform.cat_file(qc_report_file)
+
+        # Read file into qc_report
+        qc_report = parse_qc_report(report_data)
+
+        # Don't unpack if multi-sample qc-report
+        if len(qc_report.get_sample_names()) > 1:
+            return []
+
+        # Unpack qc_stats into list
+        qc_stats = []
+        for sample in qc_report.get_sample_names():
+            sample_data = qc_report.get_sample_data(sample)
+            for qc_entry in sample_data:
+                qc_stats.append(QCStat(sample, qc_entry))
+
+        return qc_stats
+
+class QCStat:
+    def __init__(self, sample_name, sample_data):
+        self.sample_name    = sample_name
+        self.key            = sample_data["Name"]
+        self.value          = sample_data["Value"]
+        self.task_id        = sample_data["Module"]
+        self.input_file     = sample_data["Source"]
+        self.notes          = sample_data["Note"]
+
+    def get_key(self):
+        return  self.key
+
+    def get_sample_id(self):
+        return self.sample_name
+
+    def get_value(self):
+        return self.value
+
+    def get_task_id(self):
+        return self.task_id
+
+    def get_input_file(self):
+        return self.input_file
+
+    def get_notes(self):
+        return self.notes

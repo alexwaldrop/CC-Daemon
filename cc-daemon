@@ -2,12 +2,12 @@
 
 # Inspiration from https://gist.github.com/shawnrice/11076762
 # Name of daemon
-daemon_name="gap-daemon"
+daemon_name="cc-daemon"
 
 # Get actual path where this script is located no matter where program is called from
 script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-# Names of GAP daemon component scripts
+# Names of CC daemon component scripts
 main_script_name="RunDaemon.py"
 resize_script_name="ResizeQueue.py"
 cancel_script_name="CancelPipeline.py"
@@ -22,7 +22,7 @@ echo_error(){
 # Test python installation
 which python 1>/dev/null || echo_error "Could not locate a python installation!"
 
-# Absolute paths to GAP daemon scripts
+# Absolute paths to CC daemon scripts
 python=$(which python)
 main_script="$script_dir/$main_script_name"
 resize_script="$script_dir/$resize_script_name"
@@ -34,9 +34,9 @@ test -f $resize_script || echo_error "$resize_script does not exist!" 1
 test -f $cancel_script || echo_error "$cancel_script does not exist!" 1
 
 # Test that scripts work and appear to produce the correct output
-( $python $main_script --help 2>&1 | grep -q GAP-Daemon ) 2> /dev/null || echo_error "Help menu of $main_script_name does not match expectations!" 1
-( $python $resize_script --help 2>&1 | grep -q GAP-Daemon-Resize ) 2> /dev/null || echo_error "Help menu of $resize_script_name does not match expectations!" 1
-( $python $cancel_script --help 2>&1 | grep -q GAP-Daemon-Cancel ) 2> /dev/null || echo_error "Help menu of $cancel_script_name does not match expectations!" 1
+( $python $main_script --help 2>&1 | grep -q CC-Daemon ) 2> /dev/null || echo_error "Help menu of $main_script_name does not match expectations!" 1
+( $python $resize_script --help 2>&1 | grep -q CC-Daemon-Resize ) 2> /dev/null || echo_error "Help menu of $resize_script_name does not match expectations!" 1
+( $python $cancel_script --help 2>&1 | grep -q CC-Daemon-Cancel ) 2> /dev/null || echo_error "Help menu of $cancel_script_name does not match expectations!" 1
 
 
 # Set appropriate read/write permissions
@@ -73,7 +73,7 @@ check_pid_file(){
 }
 
 refresh_config_file(){
-    # Move GAP config file to standard location
+    # Move CC config file to standard location
     cp $1 $config_file
     chmod 0755 $config_file
 }
@@ -191,9 +191,9 @@ show_main_usage () {
     echo "usage: $daemon_name <start | stop | status | cancel-pipeline | resize-queue | viewlog>"
     echo
     echo "Modules:"
-    echo $'\t' "start:           Start the GAP daemon service if not already running."
-    echo $'\t' "stop:            Stop the GAP daemon service if it's running."
-    echo $'\t' "status:          Check whether GAP daemon service is currently running."
+    echo $'\t' "start:           Start the CC daemon service if not already running."
+    echo $'\t' "stop:            Stop the CC daemon service if it's running."
+    echo $'\t' "status:          Check whether CC daemon service is currently running."
     echo $'\t' "cancel-pipeline: Cancel a specific pipeline being run without stopping the daemon service."
     echo $'\t' "resize-queue:    Change pipeline queue resource limits without stopping the daemon service."
     echo $'\t' "viewlog:         Tail the active log file being written by the daemon service."
@@ -211,8 +211,8 @@ show_start_usage () {
 
     echo "usage: $daemon_name start <config-file> <platform-type>"
     echo "Arguments:"
-    echo $'\t' "config-file:   Path to GAP Daemon config file."
-    echo $'\t' "platform-type: Platform where GAP daemon service will run. Supported platforms: Google."
+    echo $'\t' "config-file:   Path to CC Daemon config file."
+    echo $'\t' "platform-type: Platform where CC daemon service will run. Supported platforms: Google."
 
     # Exit with error status
     exit 1
@@ -242,11 +242,11 @@ show_resize_queue_usage () {
 
     echo "usage: $daemon_name resize-queue <action>"
     echo "Actions:"
-    echo $'\t' "INCREASE: Double pipeline queue CPU, RAM, and Disk space limits."
-    echo $'\t' "DECREASE: Halve pipeline queue CPU, RAM, and Disk space limits."
-    echo $'\t' "LOCK:     Set pipeline queue CPU, RAM, and Disk space limits to 0."
-    echo $'\t' "RESET:    Reset CPU, RAM, and Disk space limits to defaults."
-    echo $'\t' "MANUAL:   Manually set CPU, RAM, and Disk space limits."
+    echo $'\t' "INCREASE: Double pipeline queue CPU limits."
+    echo $'\t' "DECREASE: Halve pipeline queue CPU limits."
+    echo $'\t' "LOCK:     Set pipeline queue CPU limits to 0."
+    echo $'\t' "RESET:    Reset CPU limits to defaults."
+    echo $'\t' "MANUAL:   Manually set CPU limits."
 
     # Exit with error status
     exit 1
