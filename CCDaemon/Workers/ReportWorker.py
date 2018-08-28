@@ -43,6 +43,13 @@ class ReportWorker(StatusWorker):
                 self.report_queue.pop(report)
                 return
 
+            # Check to see if pipeline has already been reported
+            pipeline = self.db_helper.get_pipeline(session=session, pipeline_id=report.get_pipeline_id())
+            if pipeline.cost is not None:
+                # Remove report from queue because you don't want to keep re-processing reports
+                self.report_queue.pop(report)
+                return
+
             # See if any files declared in report are missing
             logging.debug("(ReportWorker) Checking output files...")
             self.check_output_files(report)
