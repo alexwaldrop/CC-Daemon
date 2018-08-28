@@ -70,13 +70,16 @@ class GooglePlatform(Platform):
 
         return cc_config_strings
 
-    def upload_file(self, src_path, dest_path):
+    def upload_file(self, src_path, dest_path, num_retries=2):
         cmd = "gcloud compute scp %s gap@%s:%s --zone %s" % (src_path, self.processor.name, dest_path, self.zone)
         proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
-        out, err = proc.communicate()
+        proc.communicate()
         if proc.returncode != 0:
-            logging.error("(%s) Unable to upload file to platform: %s!" % (self.name, src_path))
-            raise RuntimeError("Unable to upload config file to platform!")
+            if num_retries > 0:
+                self.upload_file(src_path, dest_path, num_retries-1)
+            else:
+                logging.error("(%s) Unable to upload file to platform: %s!" % (self.name, src_path))
+                raise RuntimeError("Unable to upload config file to platform!")
 
     def init_processor(self):
         # Initialize and return the main processor needed to load/manage the platform
@@ -108,13 +111,15 @@ class GooglePlatform(Platform):
                 logging.error("Unable to check path existence: %s" % path)
                 raise
 
-    def cat_file(self, file_path):
+    def cat_file(self, file_path, num_retries=2):
         # Cat a file and return it's contents
         cmd = "gsutil cat {0}".format(file_path)
         proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
 
         out, err = proc.communicate()
         if proc.returncode != 0:
+            if num_retries > 0:
+                return self.cat_file(file_path, num_retries-1)
             logging.error("Unable to cat file: {0}".format(file_path))
             if len(err) > 0:
                 logging.error("Received following error: %s" % err)
