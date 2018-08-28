@@ -29,7 +29,7 @@ class Processor(object):
     def destroy(self):
         pass
 
-    def run(self, job_name, cmd):
+    def run(self, job_name, cmd, num_retries=2):
 
         # Throw error if attempting to run command on stopped processor
         if self.locked:
@@ -77,6 +77,7 @@ class Processor(object):
         kwargs["stdout"] = sp.PIPE
         kwargs["stderr"] = sp.PIPE
         kwargs["preexec_fn"] = os.setsid
+        kwargs["num_retries"] = num_retries
 
         # Add process to list of processes
         self.processes[job_name] = Process(cmd, **kwargs)
