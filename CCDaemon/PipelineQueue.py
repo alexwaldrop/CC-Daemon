@@ -100,15 +100,14 @@ class PipelineQueue:
         usage_stats = "Curr Usage: %s CPUs, %s Loading Pipelines" % (self.curr_cpus, self.__num_loading)
         max_usage_stats = "Max Usage: %s CPUs, %s Loading Pipelines" % (self.max_cpus, self.load_limit)
 
-        with self.queue_lock:
-            to_return = "Pipeline\tStatus\tRuntime\n"
-            for pipeline in self.pipeline_workers.itervalues():
-                # Print report for pipeline
-                start_time = pipeline.get_start_time()
-                runtime = 0 if start_time is None else self.__time_elapsed(start_time, datetime.now())
-                to_return += "%s\t%s\t%f\n" % (pipeline.get_id(),
-                                               pipeline.get_status(),
-                                               runtime)
+        to_return = "Pipeline\tStatus\tRuntime\n"
+        pipelines = self.pipeline_workers.values()
+        for pipeline in pipelines:
+            # Print report for pipeline
+            runtime = self.__time_elapsed(pipeline.get_start_time(), datetime.now())
+            to_return += "%s\t%s\t%f\n" % (pipeline.get_id(),
+                                           pipeline.get_status(),
+                                           runtime)
         # Surround by buffer string for aesthetics
         buffer_string = "*"*32
         to_return = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % \
