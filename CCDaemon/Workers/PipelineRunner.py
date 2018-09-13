@@ -52,6 +52,10 @@ class PipelineRunner(threading.Thread):
 
         try:
 
+            # Exit run if pipeline cancelled by user
+            if self.get_status() == PipelineStatus.CANCELLING:
+                raise
+
             # Launch new platform and load all resources necessary to run GAP
             self.set_status(PipelineStatus.LOADING)
             self.platform.launch(cc_config_files=self.config_file_strings, commit_id=self.cc_version)
