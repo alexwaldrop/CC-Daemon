@@ -6,6 +6,7 @@ import os
 
 from Config import ConfigParser
 from CCDaemon.Workers import LaunchWorker, RunWorker, ReportWorker
+from CCDaemon.Pipeline import PipelineStatus, PipelineError
 from CCDaemon.Database import DBHelper
 from PipelineQueue import PipelineQueue
 from PlatformFactory import PlatformFactory
@@ -53,6 +54,9 @@ class DaemonManager:
         # Stop thread
         self.stopped = False
 
+        # Boolean for whether worker threads have started
+        self.summoned = False
+
     def validate(self):
 
         # Validate report queue
@@ -76,6 +80,11 @@ class DaemonManager:
 
         # Start running all workers
         logging.info("Summoning CC-Daemon...")
+
+        # Update potentially outdated pipeline statuses in DB
+        self.__update_outdated_runs()
+
+        self.summoned = True
         self.launch_worker.start()
         self.run_worker.start()
         self.report_worker.start()
@@ -101,9 +110,10 @@ class DaemonManager:
         self.stop()
         try:
 
-            # Clean up platform
+            # Clean up platform if worker threads have started
             logging.info("Cleaning up CC-Daemon pipelines!")
-            self.clean_up()
+            if self.summoned:
+                self.clean_up()
 
         except BaseException, e:
             # Report any error messages
@@ -243,8 +253,30 @@ class DaemonManager:
         logging.info("(CCDaemon) Initializing Email Reporter...")
         return Emailer(config=self.config.pop("email_reporter"))
 
+    def __update_outdated_runs(self):
+        # Function to be called on CC-Daemon startup that goes through all previous analyses
+        # Pipelines with status other than IDLE, FAILED, COMPLETE should be set to FAILED
+        logging.info("Updating status of outdated runs...")
 
+        # Pipelines with these stati won't be touched
+        acceptable_statuses = [PipelineStatus.FAILED, PipelineStatus.IDLE, PipelineStatus.SUCCESS]
 
+        try:
+            # Create new database session
+            with self.db_helper.session_context() as session:
+                # Get all pipelines in DB
+                pipelines = self.db_helper.get_pipeline(session)
 
+                # Loop through and update status of each
+                for pipeline in pipelines:
+                    if pipeline.status.description.upper() not in acceptable_statuses:
+                        logging.info("Orphaned pipeline to be updated: %s" % pipeline.id)
+                        pass
 
+            logging.info("Pipeline status update complete!")
 
+        except BaseException, e:
+            logging.error("(%s) Unable to update outdated run statuses!" % self.__class__.__name__)
+            if e.message != "":
+                logging.error("Received the following error message: %s" % e.message)
+            raise
