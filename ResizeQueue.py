@@ -38,8 +38,8 @@ def configure_argparser(argparser_obj):
                                type=str,
                                dest="action",
                                required=True,
-                               choices=["INCREASE", "DECREASE", "LOCK", "RESET", "CPU", "LOAD"],
-                               help="Action to perform on pipeline queue. Options: INCREASE, DECREASE, LOCK, RESET, CPU, LOAD")
+                               choices=["INCREASE", "DECREASE", "LOCK", "RESET", "MANUAL"],
+                               help="Action to perform on pipeline queue. Options: INCREASE, DECREASE, LOCK, RESET, MANUAL")
 
     # Type of action to be performed on pipeline queue
     argparser_obj.add_argument("--maxcpus",
@@ -48,7 +48,7 @@ def configure_argparser(argparser_obj):
                                dest="max_cpus",
                                required=False,
                                default=-1,
-                               help="Maximum cpu limit to use if action is 'CPU'")
+                               help="Maximum cpu limit to use if action is 'MANUAL'")
 
     argparser_obj.add_argument("--maxloading",
                                action="store",
@@ -56,7 +56,7 @@ def configure_argparser(argparser_obj):
                                dest="max_loading",
                                required=False,
                                default=-1,
-                               help="Maximum number of pipelines that can load at the same time if action is 'LOAD'")
+                               help="Maximum number of pipelines that can load at the same time if action is 'MANUAL'")
 
 def main():
 
@@ -98,12 +98,11 @@ def main():
             config["pipeline_queue"]["max_cpus"]        = 4
             config["pipeline_queue"]["max_loading"]     = 20
 
-        elif args.action == "CPU":
+        elif args.action == "MANUAL":
             # Manually set resource limits from command line input
             if args.max_cpus >= 0:
                 config["pipeline_queue"]["max_cpus"]    = args.max_cpus
 
-        elif args.action == "LOAD":
             if args.max_loading >= 0:
                 config["pipeline_queue"]["max_loading"] = args.max_loading
 
