@@ -129,7 +129,7 @@ check_resize_queue_args() {
     # Check to make sure correct number of args
     if [ $# -ne 2 ];then
         # Exit if fewer than required number of arguments
-        if [ $2 != "CPU" ] || [ $2 != "LOAD" ];then
+        if [ $2 != "CPU" ] && [ $2 != "LOAD" ];then
             show_resize_queue_usage
         fi
     fi
