@@ -97,8 +97,8 @@ class PipelineQueue:
 
     def __str__(self):
         # Print pipeline queue
-        usage_stats = "Curr Usage: %s CPUs, %s Loading Pipelines" % (self.curr_cpus, self.load_limit)
-        max_usage_stats = "Max Usage: %s CPUs, %s Loading Pipelines" % (self.max_cpus, self.__num_loading)
+        usage_stats = "Curr Usage: %s CPUs, %s Loading Pipelines" % (self.curr_cpus, self.__num_loading)
+        max_usage_stats = "Max Usage: %s CPUs, %s Loading Pipelines" % (self.max_cpus, self.load_limit)
 
         with self.queue_lock:
             to_return = "Pipeline\tStatus\tRuntime\n"
