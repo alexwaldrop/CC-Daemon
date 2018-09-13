@@ -1,6 +1,8 @@
 import threading
 from datetime import datetime
 
+from CCDaemon.Pipeline import PipelineStatus
+
 class DuplicateKeyError(Exception):
     def __init__(self, *args, **kwargs):
         super(DuplicateKeyError, self).__init__(*args, **kwargs)
@@ -11,11 +13,15 @@ class ResourceError(Exception):
 
 class PipelineQueue:
     # Container Class for holding pipeline workers actively running on the system
-    def __init__(self, max_cpus):
+    def __init__(self, max_cpus, max_loading):
 
         # Read resource capacity options from config
         self.max_cpus       = max_cpus
         assert isinstance(max_cpus, int) and max_cpus > 0, "PipelineQueue error: Max CPUs is not an integer >0!"
+
+        # Maximum number of pipelines that can be loading at a given moment
+        self.load_limit = max_loading
+        assert isinstance(max_loading, int) and max_loading > 0, "PipelineQueue error: Max Loading is not an integer >0!"
 
         # Variables for holding current resource usage levels
         self.curr_cpus          = 0
@@ -24,11 +30,22 @@ class PipelineQueue:
         self.pipeline_workers       = dict()
         self.queue_lock   = threading.Lock()
 
+    @property
+    def __num_loading(self):
+        num_loading = 0
+        for pipeline_id, pipeline in self.pipeline_workers.iteritems():
+            if pipeline.get_status() in [PipelineStatus.READY, PipelineStatus.LOADING]:
+                num_loading += 1
+        return num_loading
+
     def can_add_pipeline(self, req_cpus):
         # Determine if a pipeline can be enqueued based on its resource requirements
         with self.queue_lock:
+            # Check not CPU overload
             cpu_overload    = self.curr_cpus + req_cpus > self.max_cpus
-            return not cpu_overload
+            # Check not too many pipelines currently loading
+            loading_overload = 1 + self.__num_loading > self.load_limit
+            return not cpu_overload and not loading_overload
 
     def add_pipeline(self, pipeline_worker):
         with self.queue_lock:
@@ -80,8 +97,8 @@ class PipelineQueue:
 
     def __str__(self):
         # Print pipeline queue
-        usage_stats = "Curr Usage: %s CPUs" % self.curr_cpus
-        max_usage_stats = "Max Usage: %s CPUs" % self.max_cpus
+        usage_stats = "Curr Usage: %s CPUs, %s Loading Pipelines" % (self.curr_cpus, self.__num_loading)
+        max_usage_stats = "Max Usage: %s CPUs, %s Loading Pipelines" % (self.max_cpus, self.load_limit)
 
         with self.queue_lock:
             to_return = "Pipeline\tStatus\tRuntime\n"
@@ -101,6 +118,10 @@ class PipelineQueue:
     def set_max_cpus(self, new_max_cpus):
         with self.queue_lock:
             self.max_cpus = new_max_cpus
+
+    def set_max_loading(self, new_load_limit):
+        with self.queue_lock:
+            self.load_limit = new_load_limit
 
     @staticmethod
     def __time_elapsed(start, end):

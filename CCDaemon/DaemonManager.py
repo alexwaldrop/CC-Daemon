@@ -197,11 +197,19 @@ class DaemonManager:
 
             # Read to see if values for pipeline queue have changes from last time
             config = self.__read_config().pop("pipeline_queue")
-            max_cpus                = config["max_cpus"]
+            max_cpus    = config["max_cpus"]
+            max_loading = config["max_loading"]
 
             if max_cpus != self.pipeline_queue.max_cpus:
-                logging.info("Updating pipeline queue CPU limit from %d to %d!" % (self.pipeline_queue.max_cpus, max_cpus))
+                logging.info("Updating pipeline queue CPU limit from %d to %d!" %
+                             (self.pipeline_queue.max_cpus, max_cpus))
                 self.pipeline_queue.set_max_cpus(max_cpus)
+
+            if max_loading != self.pipeline_queue.load_limit:
+                logging.info("Updating pipeline queue loading limit from %d to %d!" %
+                             (self.pipeline_queue.load_limit, max_loading))
+                self.pipeline_queue.set_max_loading(max_loading)
+
 
         except BaseException, e:
             logging.error("(CCDaemon) Unable to refresh pipeline queue from config file!")
@@ -229,7 +237,8 @@ class DaemonManager:
         logging.info("(CCDaemon) Initializing PipelineQueue...")
         config          = self.config.pop("pipeline_queue")
         max_cpus        = config["max_cpus"]
-        return PipelineQueue(max_cpus)
+        load_limit      = config["max_loading"]
+        return PipelineQueue(max_cpus, load_limit)
 
     def __init_platform_factory(self):
         logging.info("(CCDaemon) Initializing PlatformFactory...")
