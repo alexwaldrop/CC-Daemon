@@ -227,7 +227,8 @@ class DaemonManager:
         logging.info("(CCDaemon) Initializing PipelineQueue...")
         config          = self.config.pop("pipeline_queue")
         max_cpus        = config["max_cpus"]
-        return PipelineQueue(max_cpus)
+        load_limit      = config["max_loading"]
+        return PipelineQueue(max_cpus, load_limit)
 
     def __init_platform_factory(self):
         logging.info("(CCDaemon) Initializing PlatformFactory...")
