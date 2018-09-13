@@ -131,7 +131,7 @@ class Platform(Validatable):
         cmd = "cd %s ; %s --input %s --name %s --pipeline_config %s --res_kit_config %s --plat_config %s --plat_name %s -o %s -vvv !LOG3!" % (
             self.workspace["cc_dir"], self.workspace["cc_exec"], self.workspace["sample_sheet"], self.name, self.workspace["graph"],
             self.workspace["resource_kit"], self.workspace["platform"], self.platform_type, self.final_output_dir)
-        return self.run_command("cc", cmd)
+        return self.run_command("cc", cmd, num_retries=0)
 
     def cancel_cc(self):
         # Gracefully exit CC run
@@ -188,9 +188,9 @@ class Platform(Validatable):
         # Wait for log transfer to complete
         self.processor.wait_process("return_logs")
 
-    def run_command(self, job_name, cmd):
+    def run_command(self, job_name, cmd, num_retries=2):
         # Run a command on the platform processor
-        self.processor.run(job_name, cmd)
+        self.processor.run(job_name, cmd, num_retries)
         out, err = self.processor.wait_process(job_name)
         return out, err
 

@@ -173,6 +173,30 @@ class GoogleProcessor(Processor):
         if proc_obj.has_failed():
             # Check to see whether error is fatal
             if self.is_fatal_error(proc_name, err):
+
+                # Retry process if retries are left
+                if proc_obj.get_num_retries() > 0:
+                    # Sleep for ten seconds before retrying
+                    logging.warning("(%s) Process '%s' failed but we still got %s retries left. Re-running command!" % (
+                    self.name, proc_name, proc_obj.get_num_retries()))
+                    time.sleep(10)
+                    if proc_name in ["create", "destroy"]:
+                        # Retry create/destroy commands
+                        self.processes[proc_name] = Process(proc_obj.get_command(),
+                                                            cmd=proc_obj.get_command(),
+                                                            stdout=sp.PIPE,
+                                                            stderr=sp.PIPE,
+                                                            shell=True,
+                                                            num_retries=proc_obj.get_num_retries() - 1)
+                    else:
+                        # Retry any other types of commands
+                        self.run(job_name=proc_name,
+                                 cmd=proc_obj.get_command(),
+                                 num_retries=proc_obj.get_num_retries() - 1)
+
+                    return self.wait_process(proc_name)
+
+                # Just throw an error otherwise
                 logging.error("(%s) Process '%s' failed!" % (self.name, proc_name))
                 logging.error("(%s) The following error was received: \n  %s\n%s" % (self.name, out, err))
                 raise RuntimeError("Instance %s has failed!" % self.name)
@@ -333,6 +357,3 @@ class GoogleProcessor(Processor):
             self.nr_cpus = custom_inst["nr_cpus"]
             self.mem = custom_inst["mem"]
             return custom_inst["type_name"]
-
-
-

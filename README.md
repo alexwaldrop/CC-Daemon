@@ -26,11 +26,11 @@ CC-Daemon requires a VM with at least 2 CPUs, 7.5GB RAM. The smaller the better 
 ## 2.3 Cloning CC-Daemon from GitLab
 Once you've initialized your VM and can connect via SSH, the following steps gather necessary files in order to run the daemon. First, you'll need to clone the CC-Daemon git repository from GitLab. 
 
-	sudo git clone --recursive git@gitlab.oit.duke.edu:davelab/CC-Daemon.git
+	git clone --recursive git@gitlab.oit.duke.edu:davelab/CC-Daemon.git
 	
 While you're at it, initialize the DatabaseModule submodule:
 
-    cd ./CloudConductor
+    cd ./CC-Daemon
     git submodule init
     git submodule update
 
@@ -71,7 +71,7 @@ Go ahead and change the permissions on the entire folder.
 CC-Daemon requires a Google Cloud authentication key file in order to run. Transfer it onto your instance. 
 
         # Transfer Dave lab access key file
-        gsutil cp gs://davelab_data/GAP_Daemon/gap_gcloud_key.json ~/
+        gsutil cp gs://davelab_data/GAP_Daemon/GAP_new_key.json ~/
  
  Now, you'll have to modify the config file (cc-daemon.config)so that it actually points to the key file you just transferred to the instance. 
  
