@@ -129,7 +129,7 @@ check_resize_queue_args() {
     # Check to make sure correct number of args
     if [ $# -ne 2 ];then
         # Exit if fewer than required number of arguments
-        if [ $2 != "MANUAL" ];then
+        if [ $2 != "CPU" ] || [ $2 != "LOAD" ];then
             show_resize_queue_usage
         fi
     fi
@@ -246,7 +246,8 @@ show_resize_queue_usage () {
     echo $'\t' "DECREASE: Halve pipeline queue CPU limits."
     echo $'\t' "LOCK:     Set pipeline queue CPU limits to 0."
     echo $'\t' "RESET:    Reset CPU limits to defaults."
-    echo $'\t' "MANUAL:   Manually set CPU limits."
+    echo $'\t' "CPU:      Manually set CPU limits."
+    echo $'\t' "LOAD:     Manually set number of pipeline loading limit."
 
     # Exit with error status
     exit 1
@@ -346,7 +347,7 @@ case $1 in
             # Create resize queue command
             resize_cmd="$python $resize_script --config $config_file --action $2"
         else
-            # Create queue command (for Manual setting)
+            # Create queue command (for manual CPU/LOAD setting)
             resize_cmd="$python $resize_script --config $config_file --action $2 ${@:3}"
         fi
 
