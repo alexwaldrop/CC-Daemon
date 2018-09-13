@@ -271,7 +271,12 @@ class DaemonManager:
                 for pipeline in pipelines:
                     if pipeline.status.description.upper() not in acceptable_statuses:
                         logging.info("Orphaned pipeline to be updated: %s" % pipeline.analysis_id)
-                        pass
+
+                        # Set status to FAILED
+                        self.db_helper.update_status(pipeline, status=PipelineStatus.FAILED)
+
+                        # Set error to type to OTHER and indicate that orphaned pipeline was detected by daemon
+                        self.db_helper.update_error_type(pipeline, error_type=PipelineError.OTHER, extra_error_msg="Orphaned pipeline updated upon daemon start!")
 
             logging.info("Pipeline status update complete!")
 
