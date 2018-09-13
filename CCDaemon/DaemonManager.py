@@ -270,7 +270,7 @@ class DaemonManager:
                 # Loop through and update status of each
                 for pipeline in pipelines:
                     if pipeline.status.description.upper() not in acceptable_statuses:
-                        logging.info("Orphaned pipeline to be updated: %s" % pipeline.id)
+                        logging.info("Orphaned pipeline to be updated: %s" % pipeline.analysis_id)
                         pass
 
             logging.info("Pipeline status update complete!")
