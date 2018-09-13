@@ -48,7 +48,7 @@ class PipelineRunner(threading.Thread):
         # Load pipeline platform and run pipeline using GAP
 
         # Set run start time
-        self.start_time = datetime.now()
+        self.set_start_time()
 
         try:
 
@@ -173,7 +173,12 @@ class PipelineRunner(threading.Thread):
         return self.create_time
 
     def get_start_time(self):
-        return self.start_time
+        with self.status_lock:
+            return self.start_time
+
+    def set_start_time(self):
+        with self.status_lock:
+            self.start_time = datetime.now()
 
     def get_end_time(self):
         return self.end_time
