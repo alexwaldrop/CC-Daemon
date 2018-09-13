@@ -117,11 +117,6 @@ def main():
 
     try:
 
-        # Validate CC daemon components
-        logging.info("(Main) Validating GAP daemon...")
-        # gap_daemon.validate()
-        logging.info("(Main) GAP daemon is valid!")
-
         # Define inner function to update pipeline queue when a sighup is received
         def update_daemon(signum, frame):
             logging.debug("SIGHUP received!")
