@@ -87,7 +87,8 @@ class PipelineQueue:
             to_return = "Pipeline\tStatus\tRuntime\n"
             for pipeline in self.pipeline_workers.itervalues():
                 # Print report for pipeline
-                runtime = self.__time_elapsed(pipeline.get_start_time(), datetime.now())
+                start_time = pipeline.get_start_time()
+                runtime = 0 if start_time is None else self.__time_elapsed(start_time, datetime.now())
                 to_return += "%s\t%s\t%f\n" % (pipeline.get_id(),
                                                pipeline.get_status(),
                                                runtime)
