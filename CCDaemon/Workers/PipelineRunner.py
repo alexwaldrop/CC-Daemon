@@ -15,8 +15,6 @@ class PipelineRunner(threading.Thread):
         self.name   = pipeline.name
         self.cc_version = pipeline.git_commit
 
-        logging.warning("JUST MADE RUNNER: %s" % self.id)
-
         # Platform for running pipeline
         self.platform           = platform
         self.final_output_dir   = os.path.join(pipeline.final_output_dir, str(pipeline.analysis_id))

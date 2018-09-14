@@ -44,9 +44,8 @@ class PipelineQueue:
             # Check not CPU overload
             cpu_overload    = self.curr_cpus + req_cpus > self.max_cpus
             # Check not too many pipelines currently loading
-            #loading_overload = 1 + self.__num_loading > self.load_limit
-            #return not cpu_overload and not loading_overload
-            return not cpu_overload
+            loading_overload = 1 + self.__num_loading > self.load_limit
+            return not cpu_overload and not loading_overload
 
     def add_pipeline(self, pipeline_worker):
         with self.queue_lock:
