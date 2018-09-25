@@ -183,8 +183,8 @@ class ReportWorker(StatusWorker):
         qc_report = parse_qc_report(report_data)
 
         # Don't unpack if multi-sample qc-report
-        if len(qc_report.get_sample_names()) > 1:
-            return []
+        #if len(qc_report.get_sample_names()) > 1:
+        #    return []
 
         # Unpack qc_stats into list
         qc_stats = []
