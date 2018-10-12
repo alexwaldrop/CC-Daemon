@@ -15,6 +15,7 @@ class Emailer(Validatable):
         super(Emailer, self).__init__(config)
 
         # Class of platform that will be produced
+        self.subject_prefix = self.config["subject_prefix"]
         self.sender_address = self.config["sender_address"]
         self.sender_pwd     = self.config["sender_pwd"]
         self.host           = self.config["host"]
@@ -62,7 +63,7 @@ class Emailer(Validatable):
 
         # Optionally include subject
         if msg_subj is not None:
-            msg['Subject'] = msg_subj
+            msg['Subject'] = "{0} {1}".format(self.subject_prefix, msg_subj)
 
         # Add message body
         msg.attach(MIMEText(msg_body, 'plain'))

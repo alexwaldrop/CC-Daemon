@@ -181,7 +181,7 @@ class DaemonManager:
             msg_body += "\n%s" % err_msg
 
         # Send email notifying recipients of CCDaemon failure
-        self.email_reporter.send_email(self.email_recipients, msg_body, msg_subj="CC-Daemon FAILURE ALERT!")
+        self.email_reporter.send_email(self.email_recipients, msg_body, msg_subj="FAILURE ALERT!")
 
     def is_stopped(self):
         with threading.Lock():
