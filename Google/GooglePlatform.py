@@ -60,6 +60,9 @@ class GooglePlatform(Platform):
         self.workspace["key_file"] = os.path.join(self.wrk_dir,"google_key_file.json")
         plat_config["service_account_key_file"] = self.workspace["key_file"]
 
+        # Update the correct reporting topic
+        plat_config["report_topic"] = self.config["report_topic"]
+
         # Replace existing platform config string with updated config string
         cc_config_strings["platform"] = "\n".join(plat_config.write())
 

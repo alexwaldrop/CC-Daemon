@@ -81,7 +81,10 @@ CC-Daemon requires a Google Cloud authentication key file in order to run. Trans
         	mem = 8
         	disk_image = cc-runner-image
         	service_account_key_file = /new/path/to/key/file
+        	report_topic = pubsub_topic_to_which_CC_will_push_final_reports
+
 IMPORTANT NOTE 1: In the previous code snippet, make sure to insert the actual full path to the key file.
+
 IMPORTANT NOTE 2: DO NOT change the config in any other way unless you're REALLY, REALLY sure what you're doing.
 
 # 2.5 Authorizing your CC-Daemon instance on Google Cloud SQL
