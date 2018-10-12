@@ -1,0 +1,4 @@
+SQLAlchemy
+PyMySQL
+configobj
+requests
