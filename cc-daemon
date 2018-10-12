@@ -43,7 +43,7 @@ test -f $cancel_script || echo_error "$cancel_script does not exist!" 1
 umask 022
 
 # Paths to daemon files
-daemon_dir="$HOME/.$daemon_name"
+daemon_dir="${PWD}/.$daemon_name"
 pid_file="$daemon_dir/$daemon_name.pid"
 config_file="$daemon_dir/$daemon_name.config"
 log_file="$daemon_dir/$daemon_name.log"
